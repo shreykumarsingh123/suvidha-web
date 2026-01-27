@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "newProjectRoot": "src/frontend",
+  "projects": {
+    "suvidha-2026": {
+      "projectType": "application",
+      "root": "src/frontend",
+      "sourceRoot": "src/frontend/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/suvidha-2026",
+            "index": "src/frontend/src/index.html",
+            "main": "src/frontend/src/main.ts",
+            "polyfills": "src/frontend/src/polyfills.ts",
+            "tsConfig": "src/frontend/tsconfig.app.json",
+            "assets": [
+              "src/frontend/src/favicon.ico",
+              "src/frontend/src/assets"
+            ],
+            "styles": [
+              "src/frontend/src/styles.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/frontend/src/environments/environment.ts",
+                  "with": "src/frontend/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2kb",
+                  "maximumError": "5kb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "suvidha-2026:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "suvidha-2026:build:production"
+            }
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "src/frontend/src/test.ts",
+            "polyfills": "src/frontend/src/polyfills.ts",
+            "tsConfig": "src/frontend/tsconfig.spec.json",
+            "karmaConfig": "karma.conf.js",
+            "assets": [
+              "src/frontend/src/favicon.ico",
+              "src/frontend/src/assets"
+            ],
+            "styles": [
+              "src/frontend/src/styles.css"
+            ],
+            "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "src/frontend/tsconfig.app.json",
+              "src/frontend/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "defaultProject": "suvidha-2026"
+}

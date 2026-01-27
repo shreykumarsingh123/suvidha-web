@@ -1,0 +1,14 @@
+<div class="kiosk-container">
+    <h1>Welcome to SUVIDHA Helpdesk</h1>
+    <p>Please select a service:</p>
+    <div class="service-options">
+        <button class="service-button" (click)="selectService('ticketCreation')">Create a Ticket</button>
+        <button class="service-button" (click)="selectService('statusInquiry')">Check Ticket Status</button>
+        <button class="service-button" (click)="selectService('feedback')">Provide Feedback</button>
+    </div>
+    
+    <div *ngIf="selectedService" class="service-details">
+        <h2>You selected: {{ selectedService }}</h2>
+        <app-touch-panel [service]="selectedService"></app-touch-panel>
+    </div>
+</div>

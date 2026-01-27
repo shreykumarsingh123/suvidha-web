@@ -1,0 +1,12 @@
+<div class="touch-panel">
+    <h1>Welcome to SUVIDHA Helpdesk</h1>
+    <p>Please select an option below:</p>
+    <div class="options">
+        <button (click)="createTicket()">Create a Ticket</button>
+        <button (click)="checkStatus()">Check Ticket Status</button>
+        <button (click)="speakToAgent()">Speak to an Agent</button>
+    </div>
+    <div class="feedback" *ngIf="feedbackMessage">
+        <p>{{ feedbackMessage }}</p>
+    </div>
+</div>
