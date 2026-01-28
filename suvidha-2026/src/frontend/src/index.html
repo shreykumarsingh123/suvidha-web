@@ -6,7 +6,76 @@
     <title>SUVIDHA - Smart Urban Virtual Interactive Digital Helpdesk Assistant</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+</body>
 <body>
-    <app-root></app-root>
+    <noscript>
+        <div style="font-family: Arial, sans-serif; padding: 2rem; text-align: center;">
+            <h1>SUVIDHA — Preview Homepage</h1>
+            <p>The Angular app hasn't booted in this environment. This is a static preview of the homepage.</p>
+        </div>
+    </noscript>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">SUVIDHA<span class="plus">+</span></div>
+            <div class="lang">English | हिंदी</div>
+        </header>
+
+        <main class="container">
+            <section class="home-panel">
+                <div class="hero">
+                    <h2>Welcome to Smart City Services</h2>
+                    <p>Resolve your civic needs quickly and easily.</p>
+
+                    <div class="search">
+                        <input placeholder="Type or speak your issue..." />
+                        <button aria-label="voice">🎤</button>
+                    </div>
+                </div>
+
+                <div class="services-grid">
+                    <div class="service blue">⚡<span>Electricity Services</span></div>
+                    <div class="service green">🧯<span>Gas Services</span></div>
+                    <div class="service lightblue">🚰<span>Water & Sanitation</span></div>
+                    <div class="service red">🏛️<span>Municipal Complaints</span></div>
+                    <div class="service orange">💳<span>Pay Bills</span></div>
+                    <div class="service purple">🔍<span>Track Applications</span></div>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="qa">Pay Last Bill</button>
+                    <button class="qa">Track Complaint</button>
+                    <button class="qa">Download Receipt</button>
+                </div>
+            </section>
+
+            <aside class="dashboard">
+                <div class="profile">
+                    <div class="avatar">R</div>
+                    <div class="user">Welcome, Rajesh Kumar<br><small>Sector 24, Mumbai</small></div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat pending">03<br><small>Pending</small></div>
+                    <div class="stat resolved">08<br><small>Resolved</small></div>
+                    <div class="stat bills">₹1,250<br><small>Upcoming Bills</small></div>
+                    <div class="stat payments">₹750<br><small>Recent Payments</small></div>
+                </div>
+
+                <div class="my-services">
+                    <div class="ms">My Complaints</div>
+                    <div class="ms">My Bills</div>
+                    <div class="ms">Uploaded Documents</div>
+                    <div class="ms">Download Receipts</div>
+                </div>
+
+                <div class="quick-actions-vertical">
+                    <button class="qa primary">Track Request</button>
+                    <button class="qa secondary">Pay Last Bill</button>
+                    <button class="qa">Download Receipt</button>
+                </div>
+            </aside>
+        </main>
+        <footer class="footer">Important Notices: Power outage in Sector 12 from 2 PM to 6 PM · Water Supplication Alert</footer>
+    </div>
 </body>
 </html>

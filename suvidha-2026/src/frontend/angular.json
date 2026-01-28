@@ -1,27 +1,27 @@
 {
   "version": 1,
-  "newProjectRoot": "src/frontend",
+  "newProjectRoot": "",
   "projects": {
     "suvidha-2026": {
       "projectType": "application",
-      "root": "src/frontend",
-      "sourceRoot": "src/frontend/src",
+      "root": "",
+      "sourceRoot": "src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "outputPath": "dist/suvidha-2026",
-            "index": "src/frontend/src/index.html",
-            "main": "src/frontend/src/main.ts",
-            "polyfills": "src/frontend/src/polyfills.ts",
-            "tsConfig": "src/frontend/tsconfig.app.json",
+            "index": "src/index.html",
+            "main": "src/main.ts",
+            "polyfills": "src/polyfills.ts",
+            "tsConfig": "tsconfig.app.json",
             "assets": [
-              "src/frontend/src/favicon.ico",
-              "src/frontend/src/assets"
+              "src/favicon.ico",
+              "src/assets"
             ],
             "styles": [
-              "src/frontend/src/styles.css"
+              "src/styles.css"
             ],
             "scripts": []
           },
@@ -29,8 +29,8 @@
             "production": {
               "fileReplacements": [
                 {
-                  "replace": "src/frontend/src/environments/environment.ts",
-                  "with": "src/frontend/src/environments/environment.prod.ts"
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
                 }
               ],
               "optimization": true,
@@ -55,37 +55,37 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "suvidha-2026:build"
+            "buildTarget": "suvidha-2026:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "suvidha-2026:build:production"
+              "buildTarget": "suvidha-2026:build:production"
             }
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "src/frontend/src/test.ts",
-            "polyfills": "src/frontend/src/polyfills.ts",
-            "tsConfig": "src/frontend/tsconfig.spec.json",
+            "main": "src/test.ts",
+            "polyfills": "src/polyfills.ts",
+            "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",
             "assets": [
-              "src/frontend/src/favicon.ico",
-              "src/frontend/src/assets"
+              "src/favicon.ico",
+              "src/assets"
             ],
             "styles": [
-              "src/frontend/src/styles.css"
+              "src/styles.css"
             ],
             "scripts": []
           }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
+            "options": {
             "tsConfig": [
-              "src/frontend/tsconfig.app.json",
-              "src/frontend/tsconfig.spec.json"
+              "tsconfig.app.json",
+              "tsconfig.spec.json"
             ],
             "exclude": [
               "**/node_modules/**"
@@ -95,5 +95,8 @@
       }
     }
   },
-  "defaultProject": "suvidha-2026"
+  "defaultProject": "suvidha-2026",
+  "cli": {
+    "analytics": "06851235-e108-4b09-8284-b1fe75674a34"
+  }
 }

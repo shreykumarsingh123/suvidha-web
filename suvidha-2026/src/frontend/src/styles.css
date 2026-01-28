@@ -1,72 +1,44 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
+:root{
+  --bg:#e9f1fb;
+  --card:#ffffff;
+  --accent:#1e6bd8;
+  --muted:#6b7280;
 }
+*{box-sizing:border-box}
+body{font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);margin:0;color:#123}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:18px 48px;background:linear-gradient(90deg,#0f4fb3,#2b86d8);color:#fff}
+.brand{font-weight:700;font-size:20px}
+.brand .plus{color:#ffd24d;margin-left:6px}
+.container{display:flex;gap:24px;max-width:1200px;margin:32px auto;padding:0 16px}
+.home-panel{flex:1;background:linear-gradient(180deg,#ffffff,#f6fbff);border-radius:12px;padding:28px;box-shadow:0 6px 20px rgba(16,24,40,0.08)}
+.dashboard{width:360px;background:linear-gradient(180deg,#ffffff,#f7fbff);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
+.hero h2{margin:0;font-size:26px;color:#0b3f6f}
+.hero p{margin:6px 0 18px;color:var(--muted)}
+.search{display:flex;gap:8px;align-items:center}
+.search input{flex:1;padding:14px 18px;border-radius:36px;border:1px solid #e6eefb;background:#fff}
+.search button{border:none;background:var(--accent);color:#fff;padding:10px 14px;border-radius:50%;cursor:pointer}
+.services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px}
+.service{display:flex;align-items:center;gap:12px;padding:18px;border-radius:10px;color:#fff;font-weight:600;min-height:64px}
+.service span{margin-left:auto;color:#fff}
+.service.blue{background:linear-gradient(90deg,#2b86d8,#1e6bd8)}
+.service.green{background:linear-gradient(90deg,#2bb98f,#1fa67a)}
+.service.lightblue{background:linear-gradient(90deg,#3aa3e6,#4db4f0)}
+.service.red{background:linear-gradient(90deg,#ee6f6f,#e04545)}
+.service.orange{background:linear-gradient(90deg,#f59d2b,#f07c2b)}
+.service.purple{background:linear-gradient(90deg,#7b61ff,#5b45e6)}
+.quick-actions{display:flex;gap:12px;margin-top:20px}
+.qa{padding:10px 16px;border-radius:8px;border:1px solid rgba(0,0,0,0.05);background:#fff;cursor:pointer}
+.qa.primary{background:linear-gradient(90deg,#2b86d8,#1e6bd8);color:#fff;border:none}
+.qa.secondary{background:#ff8a5b;color:#fff;border:none}
+.profile{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(90deg,#2b86d8,#1e6bd8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.user{font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
+.stat{background:#fff;padding:10px;border-radius:8px;text-align:center;box-shadow:0 3px 8px rgba(16,24,40,0.04)}
+.stat small{display:block;color:var(--muted);font-weight:600}
+.my-services{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+.ms{background:#fff;padding:12px;border-radius:8px;text-align:center;box-shadow:0 2px 6px rgba(16,24,40,0.04)}
+.quick-actions-vertical{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.footer{margin:24px auto;max-width:1200px;background:#0f4fb3;color:#fff;padding:12px 20px;border-radius:6px;text-align:center}
 
-h1, h2, h3 {
-    color: #333;
-}
-
-.container {
-    width: 80%;
-    margin: auto;
-    overflow: hidden;
-}
-
-.header {
-    background: #35424a;
-    color: #ffffff;
-    padding: 20px 0;
-    text-align: center;
-}
-
-.button {
-    display: inline-block;
-    font-size: 16px;
-    color: #fff;
-    background: #5cb85c;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.button:hover {
-    background: #4cae4c;
-}
-
-.touch-panel {
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.kiosk {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.kiosk .kiosk-title {
-    font-size: 24px;
-    margin-bottom: 20px;
-}
-
-.kiosk .kiosk-content {
-    width: 100%;
-    max-width: 600px;
-}
-
-.footer {
-    text-align: center;
-    padding: 20px 0;
-    background: #35424a;
-    color: #ffffff;
-    position: relative;
-    bottom: 0;
-    width: 100%;
-}
+@media (max-width:1000px){.container{flex-direction:column;padding:16px}.dashboard{width:100%}}
