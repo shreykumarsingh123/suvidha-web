@@ -8,6 +8,18 @@ import { Component } from '@angular/core';
 export class TouchPanelComponent {
   // Define properties and methods for the touch panel interface here
 
+  createTicket() {
+    console.log('Create ticket clicked');
+  }
+
+  checkStatus() {
+    console.log('Check status clicked');
+  }
+
+  speakToAgent() {
+    console.log('Speak to agent clicked');
+  }
+
   constructor() {
     // Initialization logic
   }

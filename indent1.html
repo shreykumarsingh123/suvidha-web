@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUVIDHA - Smart Urban Kiosk</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <style>
+        /* Base Styles */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Screen Management */
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+            position: absolute;
+            inset: 0;
+            flex-direction: column;
+            background-color: #f1f5f9; /* Slate-100 to match kiosk feel */
+            overflow-y: auto; /* Added for PC scrolling if height is small */
+        }
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            z-index: 10;
+        }
+
+        /* --- ANIMATIONS --- */
+
+        /* 1. Water Ripple Effect */
+        @keyframes ripple-wave {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7), 0 0 0 0 rgba(255, 255, 255, 0.5); }
+            50% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0), 0 0 0 10px rgba(255, 255, 255, 0.3); }
+            100% { box-shadow: 0 0 0 40px rgba(255, 255, 255, 0), 0 0 0 20px rgba(255, 255, 255, 0); }
+        }
+        .btn-water {
+            animation: ripple-wave 2s infinite linear;
+        }
+
+        /* 2. Slide Up Entrance */
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-enter {
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* 3. Tactile Button Press */
+        .btn-tactile:active {
+            border-bottom-width: 0px;
+            transform: translateY(4px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* PC Hover effect enhancement */
+        .btn-tactile:hover {
+            background-color: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        /* 4. Marquee (News Ticker) */
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 25s linear infinite;
+        }
+
+        /* 5. Receipt Printing */
+        @keyframes printScroll {
+            0% { height: 0; opacity: 0; }
+            100% { height: auto; min-height: 240px; opacity: 1; }
+        }
+        .paper-print {
+            animation: printScroll 2.5s ease-out forwards;
+        }
+
+        /* Background Pattern */
+        .bg-hexagon {
+            background-color: #1e3a8a;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%23ffffff' fill-opacity='0.05' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; }
+        
+        /* --- NEW GOVERNMENT KIOSK STYLES --- */
+        .kiosk-card {
+            border-radius: 16px; /* Slightly more rounded for iPad feel */
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            /* Ensure height consistency */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .kiosk-card:hover {
+            transform: translateY(-6px) scale(1.02); /* Better hover for PC */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            z-index: 5;
+        }
+        .kiosk-card:active {
+            transform: scale(0.97);
+        }
+        
+        /* Specific Card Gradients based on User Image */
+        .card-yellow { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); }
+        .card-blue { background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%); }
+        .card-green { background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%); }
+        .card-red { background: linear-gradient(135deg, #f87171 0%, #dc2626 100%); }
+        .card-light { background: white; border: 1px solid #e2e8f0; }
+        
+        /* Bottom Strip on Cards */
+        .card-strip {
+            width: 100%;
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: white;
+            font-weight: 700;
+            backdrop-filter: blur(4px);
+            letter-spacing: 0.025em;
+        }
+
+        .action-strip {
+             width: 100%;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="relative w-full h-screen overflow-hidden flex flex-col bg-slate-50">
+
+        <!-- GLOBAL HEADER -->
+        <div id="header" class="bg-[#1e3a8a] text-white shadow-lg z-50 hidden flex-none">
+            <div class="max-w-7xl mx-auto w-full">
+                <!-- Top Bar -->
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center gap-4 cursor-pointer hover:opacity-90 transition-opacity" onclick="navigate('dashboard')">
+                        <div class="w-12 h-12 bg-yellow-400 rounded-lg flex items-center justify-center text-2xl shadow-md text-blue-900 font-bold border-2 border-white">🏛</div>
+                        <div>
+                            <h1 class="text-2xl font-black leading-none tracking-tight">SUVIDHA</h1>
+                            <p class="text-xs text-blue-200 font-bold uppercase tracking-wider mt-0.5">Smart City Mission</p>
+                        </div>
+                    </div>
+                    
+                    <!-- MODIFIED HEADER RIGHT SECTION with LOGOUT TIMER -->
+                    <div class="text-right flex items-center gap-4">
+                        <!-- Logout Timer Box -->
+                        <div id="header-timer-box" class="flex flex-col items-end mr-2">
+                             <span class="text-[10px] text-blue-300 uppercase tracking-wider font-bold">Auto Logout</span>
+                             <span id="header-timer" class="text-xl font-mono font-bold text-yellow-400 leading-none">02:00</span>
+                        </div>
+                        
+                        <!-- Existing Clock -->
+                        <div id="clock" class="text-2xl font-bold font-mono bg-blue-800/50 px-4 py-2 rounded-lg border border-blue-700">12:00</div>
+                    </div>
+                </div>
+                <!-- REMOVED OLD TICKER FROM HERE -->
+            </div>
+        </div>
+
+        <!-- === SCREENS START === -->
+
+        <!-- 1. WELCOME SCREEN -->
+        <div id="welcome" class="screen active bg-hexagon justify-center items-center relative overflow-hidden pb-32">
+            <div class="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/50 to-transparent"></div>
+            
+            <!-- Hidden Admin Button -->
+            <div class="absolute top-0 right-0 w-24 h-24 z-50 cursor-default" ondblclick="navigate('admin')"></div>
+
+            <div class="relative z-10 flex flex-col items-center text-center p-8 max-w-5xl w-full">
+                <div class="mb-10 relative">
+                    <div class="absolute inset-0 bg-blue-500 blur-3xl opacity-30 rounded-full animate-pulse"></div>
+                    <div class="w-48 h-48 rounded-full border border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center shadow-2xl relative">
+                         <div class="w-36 h-36 rounded-full border border-white/20 flex items-center justify-center">
+                             <i data-lucide="building-2" class="text-yellow-400 w-20 h-20 filter drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"></i>
+                         </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4 mb-16 text-white flex flex-col items-center">
+                    <div class="px-8 py-2 rounded-full border border-white/30 bg-white/10 backdrop-blur-md mb-2 shadow-lg">
+                        <h2 class="text-xs font-bold tracking-[0.2em] text-blue-100 uppercase">GOVERNMENT OF INDIA</h2>
+                    </div>
+                    <h1 class="text-7xl md:text-9xl font-black tracking-tight drop-shadow-xl bg-gradient-to-b from-white to-blue-100 bg-clip-text text-transparent transform scale-y-110">SUVIDHA</h1>
+                    <p class="text-xl md:text-2xl text-blue-200 font-light tracking-wide opacity-90">Unified Civic Services Kiosk</p>
+                </div>
+                
+                <button onclick="navigate('language')" class="btn-water group relative bg-white text-[#0f172a] text-2xl font-bold px-24 py-6 rounded-full shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-transform hover:scale-105 active:scale-95 flex items-center gap-4 z-50">
+                    <span>Touch to Start</span>
+                    <i data-lucide="arrow-right" class="group-hover:translate-x-1 transition-transform stroke-[3px]"></i>
+                </button>
+            </div>
+            
+            <!-- Footer -->
+            <div class="absolute bottom-0 w-full bg-[#020617]/90 backdrop-blur-xl border-t border-white/10 h-auto py-4 flex items-center justify-between px-10 z-20 text-white">
+                <div class="flex items-center gap-4">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" class="h-10 w-auto invert opacity-90" alt="Emblem">
+                    <div class="text-left border-l border-white/20 pl-4">
+                        <div class="text-[10px] uppercase tracking-widest text-blue-300">Ministry of</div>
+                        <div class="text-base font-bold leading-none">Housing & Urban Affairs</div>
+                    </div>
+                </div>
+                <div class="hidden md:flex flex-col items-center text-white/50 text-xs">
+                    <span class="uppercase tracking-[0.2em] mb-1 font-semibold">Powered By</span>
+                    <span class="font-bold text-white text-sm tracking-wide">Smart City Mission • C-DAC</span>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] text-white/50 uppercase tracking-widest mb-1 font-semibold">System Status</div>
+                    <div class="flex items-center gap-2 justify-end">
+                         <div class="flex gap-1.5">
+                             <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
+                             <div class="w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_8px_#3b82f6]"></div>
+                         </div>
+                         <span class="text-sm font-bold text-white/90">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. LANGUAGE SELECTION -->
+        <div id="language" class="screen justify-center items-center bg-slate-100 p-6 overflow-y-auto">
+            <div class="max-w-2xl w-full bg-white rounded-[2.5rem] shadow-2xl p-10 border border-slate-200 relative animate-enter my-auto">
+                <h2 class="text-4xl font-bold text-slate-800 text-center mb-10">Select Language / भाषा चुनें</h2>
+                <div class="grid gap-6">
+                    <button onclick="changeLanguage('EN')" class="group w-full flex items-center justify-between p-8 bg-slate-50 hover:bg-blue-50 rounded-3xl border-2 border-slate-200 hover:border-blue-500 transition-all shadow-sm hover:shadow-lg cursor-pointer">
+                        <div class="flex items-center gap-6">
+                            <div class="w-20 h-20 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-3xl border-2 border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">Aa</div>
+                            <div class="text-left">
+                                <span class="block text-3xl font-bold text-slate-800">English</span>
+                                <span class="text-sm text-slate-500 uppercase tracking-wider font-bold">Default</span>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="text-slate-300 w-10 h-10 group-hover:text-blue-600"></i>
+                    </button>
+                    <button onclick="changeLanguage('HI')" class="group w-full flex items-center justify-between p-8 bg-slate-50 hover:bg-blue-50 rounded-3xl border-2 border-slate-200 hover:border-blue-500 transition-all shadow-sm hover:shadow-lg cursor-pointer">
+                        <div class="flex items-center gap-6">
+                            <div class="w-20 h-20 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-3xl border-2 border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">अ</div>
+                            <div class="text-left">
+                                <span class="block text-3xl font-bold text-slate-800">हिंदी</span>
+                                <span class="text-sm text-slate-500 uppercase tracking-wider font-bold">राजभाषा</span>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="text-slate-300 w-10 h-10 group-hover:text-blue-600"></i>
+                    </button>
+                </div>
+                <div class="mt-10 text-center">
+                    <button onclick="navigate('welcome')" class="px-8 py-4 rounded-full text-slate-400 font-bold hover:bg-slate-100 hover:text-slate-700 transition-colors flex items-center gap-2 mx-auto cursor-pointer">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i> Cancel / रद्द करें
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. LOGIN SCREEN -->
+        <div id="login" class="screen justify-center items-center bg-slate-100 p-4 overflow-y-auto">
+            <div class="max-w-5xl w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-auto md:min-h-[600px] border border-slate-200 animate-enter relative my-auto">
+                
+                <!-- Left Panel -->
+                <div class="hidden md:flex w-5/12 bg-[#0f172a] p-12 flex-col justify-between text-white relative">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md mb-8 border border-white/10">
+                            <i data-lucide="shield-check" class="text-green-400 w-8 h-8"></i>
+                        </div>
+                        <h2 id="login-side-title" class="text-4xl font-bold mb-4 leading-tight">Secure Citizen<br>Authentication</h2>
+                        <p id="login-side-desc" class="text-slate-400 text-lg">Access electricity, water, gas, and municipal services securely.</p>
+                    </div>
+                </div>
+
+                <!-- Right Panel (Form) -->
+                <div class="w-full md:w-7/12 p-8 md:p-12 flex flex-col items-center justify-center bg-white relative">
+                    <button onclick="navigate('language')" class="absolute top-6 left-6 p-4 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-600 transition-colors z-50 shadow-sm border border-slate-200 cursor-pointer">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </button>
+
+                    <div class="w-full max-w-md">
+                        <div class="text-center mb-8">
+                            <h2 id="login-title" class="text-3xl font-bold text-slate-900 mb-2">Login</h2>
+                            <p id="login-subtitle" class="text-slate-500">Enter your 10-digit mobile number</p>
+                        </div>
+
+                        <!-- Input -->
+                        <div class="bg-slate-50 p-3 rounded-2xl border-2 border-slate-200 focus-within:border-blue-600 transition-all shadow-inner mb-8 flex items-center">
+                            <div class="px-5 py-2 border-r-2 border-slate-200">
+                                <span class="text-slate-400 font-bold text-2xl">+91</span>
+                            </div>
+                            <!-- Added title attribute for accessibility -->
+                            <input type="text" id="mobileInput" readonly title="Use on-screen keypad or keyboard" class="w-full bg-transparent text-4xl font-mono p-4 text-slate-800 outline-none tracking-[0.2em] placeholder:text-slate-300 text-center cursor-text" placeholder="__________">
+                        </div>
+
+                        <!-- Keypad -->
+                        <div class="grid grid-cols-3 gap-4 mb-8">
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('1')">1</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('2')">2</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('3')">3</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('4')">4</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('5')">5</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('6')">6</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('7')">7</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('8')">8</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('9')">9</button>
+                            
+                            <button class="btn-tactile h-20 bg-amber-50 text-amber-700 font-bold rounded-xl border-b-[6px] border-amber-200 shadow-sm flex items-center justify-center text-lg active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="clearKey()">CLR</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('0')">0</button>
+                            <button class="btn-tactile h-20 bg-red-50 text-red-600 font-bold rounded-xl border-b-[6px] border-red-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="delKey()">
+                                <i data-lucide="delete" class="w-8 h-8"></i>
+                            </button>
+                        </div>
+
+                        <button onclick="requestOtp()" id="loginBtn" class="w-full py-5 bg-slate-300 text-white text-xl font-bold rounded-xl shadow-lg border-b-[6px] border-slate-400 transition-all flex items-center justify-center gap-3 pointer-events-none opacity-70 transform">
+                            <span id="login-btn-text">VERIFY & PROCEED</span> 
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                        <p class="text-center text-xs text-slate-400 mt-4">PC Users: Use keyboard numbers to type</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3.5 OTP SCREEN -->
+        <div id="otp" class="screen justify-center items-center bg-slate-100 p-4 overflow-y-auto">
+            <div class="max-w-5xl w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-auto md:min-h-[600px] border border-slate-200 animate-enter relative my-auto">
+                
+                <!-- Left Panel (Info) -->
+                <div class="hidden md:flex w-5/12 bg-[#0f172a] p-12 flex-col justify-between text-white relative">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md mb-8 border border-white/10">
+                            <i data-lucide="lock" class="text-yellow-400 w-8 h-8"></i>
+                        </div>
+                        <h2 id="otp-side-title" class="text-4xl font-bold mb-4 leading-tight">Identity<br>Verification</h2>
+                        <p id="otp-side-desc" class="text-slate-400 text-lg">We have sent a 4-digit One Time Password (OTP) to your mobile.</p>
+                    </div>
+                </div>
+
+                <!-- Right Panel (Form) -->
+                <div class="w-full md:w-7/12 p-8 md:p-12 flex flex-col items-center justify-center bg-white relative">
+                    <!-- Back Button -->
+                    <button onclick="navigate('login')" class="absolute top-6 left-6 p-4 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-600 transition-colors z-50 shadow-sm border border-slate-200 cursor-pointer">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </button>
+
+                    <div class="w-full max-w-md">
+                        <div class="text-center mb-8">
+                            <h2 id="otp-title" class="text-3xl font-bold text-slate-900 mb-2">Enter OTP</h2>
+                            <p id="otp-subtitle" class="text-slate-500">Sent to +91 98XXX-XXXXX</p>
+                        </div>
+
+                        <!-- OTP Input -->
+                        <div class="flex justify-center mb-8 gap-4">
+                            <input type="text" id="otpInput" readonly title="Use on-screen keypad or keyboard" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl text-5xl font-mono py-4 text-center text-slate-800 tracking-[0.5em] focus:border-blue-500 outline-none cursor-text" placeholder="____">
+                        </div>
+
+                        <!-- Keypad (Duplicate for OTP) -->
+                        <div class="grid grid-cols-3 gap-4 mb-8">
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('1')">1</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('2')">2</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('3')">3</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('4')">4</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('5')">5</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('6')">6</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('7')">7</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('8')">8</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('9')">9</button>
+                            
+                            <button class="btn-tactile h-20 bg-amber-50 text-amber-700 font-bold rounded-xl border-b-[6px] border-amber-200 shadow-sm flex items-center justify-center text-lg active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="clearKey()">CLR</button>
+                            <button class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="addKey('0')">0</button>
+                            <button class="btn-tactile h-20 bg-red-50 text-red-600 font-bold rounded-xl border-b-[6px] border-red-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" onclick="delKey()">
+                                <i data-lucide="delete" class="w-8 h-8"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <button onclick="verifyOtp()" id="otpBtn" class="w-full py-5 bg-slate-300 text-white text-xl font-bold rounded-xl shadow-lg border-b-[6px] border-slate-400 transition-all flex items-center justify-center gap-3 pointer-events-none opacity-70 transform">
+                                <span id="otp-btn-text">CONFIRM OTP</span> 
+                                <i data-lucide="check-circle"></i>
+                            </button>
+                            <button class="w-full text-slate-500 font-bold text-sm hover:text-blue-600 transition-colors cursor-pointer" id="otp-resend">
+                                Resend OTP (30s)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. DASHBOARD (REFACTORED for PC/iPad Grid Friendly) -->
+        <div id="dashboard" class="screen bg-slate-100 overflow-y-auto">
+            <!-- Center Content Container (Vertical & Horizontal) -->
+            <!-- ADDED pt-28 to push content below fixed header -->
+            <!-- Changed justify-center to justify-start for top-down layout -->
+            <div class="flex-1 px-8 pt-28 pb-8 w-full max-w-[1400px] mx-auto min-h-screen flex flex-col justify-start">
+                
+                <!-- Welcome Section -->
+                <div class="hidden">
+                    <h2 id="dash-welcome">Namaste, Arjun</h2>
+                    <span id="dash-lastlogin">Last Login...</span>
+                    <span id="txt-totaldue">Total Outstanding</span>
+                </div>
+
+                <!-- MOVED ALERT HERE: PROPERLY SPACED AND BORDERED -->
+                <div class="w-full mb-6 animate-enter z-20">
+                    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-start sm:items-center gap-3">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 flex-shrink-0 text-red-600"></i>
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                                <span class="font-black text-red-800">ALERT:</span>
+                                <span class="font-medium">Heavy rainfall expected in Zone 4. Please avoid low lying areas. • MUNICIPAL NOTICE: Water supply maintenance tomorrow.</span>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-red-400 border border-red-200 px-2 py-1 rounded bg-white whitespace-nowrap hidden md:block">Municipal Notice</span>
+                    </div>
+                </div>
+
+                <!-- MAIN SERVICES GRID: 3 Columns for PC/iPad to create Uniform Boxes -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8 animate-enter">
+                    
+                    <!-- 1. ELECTRICITY (Yellow Gradient) -->
+                    <div onclick="initServiceFlow('elec', 1240, 'text-yellow-900', 'bg-yellow-100')" class="kiosk-card card-yellow cursor-pointer min-h-[280px]">
+                        <div class="p-8 flex-1 flex flex-col justify-start items-start text-white pb-14">
+                            <div class="bg-white/20 p-4 rounded-xl mb-6 backdrop-blur-sm shadow-inner">
+                                <i data-lucide="zap" class="w-10 h-10 text-white"></i>
+                            </div>
+                            <h3 id="svc-electricity" class="text-3xl font-black leading-tight tracking-tight drop-shadow-sm">Electricity<br>Services</h3>
+                        </div>
+                        <div class="card-strip absolute bottom-0 left-0">
+                            <span>View Bill & Pay</span>
+                            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <!-- 2. WATER (Blue Gradient) -->
+                    <div onclick="initServiceFlow('water', 450, 'text-blue-900', 'bg-blue-100')" class="kiosk-card card-blue cursor-pointer min-h-[280px]">
+                        <div class="p-8 flex-1 flex flex-col justify-start items-start text-white pb-14">
+                            <div class="bg-white/20 p-4 rounded-xl mb-6 backdrop-blur-sm shadow-inner">
+                                <i data-lucide="droplets" class="w-10 h-10 text-white"></i>
+                            </div>
+                            <h3 id="svc-water" class="text-3xl font-black leading-tight tracking-tight drop-shadow-sm">Water &<br>Sanitation</h3>
+                        </div>
+                        <div class="card-strip absolute bottom-0 left-0">
+                            <span>Connection Details</span>
+                            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <!-- 3. GAS (Green Gradient) -->
+                    <div onclick="initServiceFlow('gas', 890, 'text-green-900', 'bg-green-100')" class="kiosk-card card-green cursor-pointer min-h-[280px]">
+                        <div class="p-8 flex-1 flex flex-col justify-start items-start text-white pb-14">
+                            <div class="bg-white/20 p-4 rounded-xl mb-6 backdrop-blur-sm shadow-inner">
+                                <i data-lucide="flame" class="w-10 h-10 text-white"></i>
+                            </div>
+                            <h3 id="svc-gas" class="text-3xl font-black leading-tight tracking-tight drop-shadow-sm">Gas<br>Services</h3>
+                        </div>
+                        <div class="card-strip absolute bottom-0 left-0">
+                            <span>Book Cylinder</span>
+                            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <!-- 4. MUNICIPAL (Red Gradient) -->
+                    <div onclick="initServiceFlow('muni', 0, 'text-red-900', 'bg-red-100')" class="kiosk-card card-red cursor-pointer min-h-[280px]">
+                        <div class="p-8 flex-1 flex flex-col justify-start items-start text-white pb-14">
+                            <div class="bg-white/20 p-4 rounded-xl mb-6 backdrop-blur-sm shadow-inner">
+                                <i data-lucide="megaphone" class="w-10 h-10 text-white"></i>
+                            </div>
+                            <h3 id="svc-municipal" class="text-3xl font-black leading-tight tracking-tight drop-shadow-sm">Municipal<br>Complaints</h3>
+                        </div>
+                        <div class="card-strip absolute bottom-0 left-0">
+                            <span>File Grievance</span>
+                            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <!-- 5. PAY BILLS (Light Card - Consistent Size) -->
+                    <div onclick="navigate('payment')" class="kiosk-card card-light cursor-pointer min-h-[280px]">
+                         <div class="p-8 flex-1 flex flex-col justify-start items-start pb-14">
+                            <div class="bg-orange-100 p-4 rounded-xl mb-6 shadow-sm">
+                                <i data-lucide="file-text" class="w-10 h-10 text-orange-600"></i>
+                            </div>
+                            <h3 id="act-paybills" class="text-3xl font-black text-slate-800 mb-2 tracking-tight">Pay Bills</h3>
+                            <p class="text-slate-500 font-bold text-sm">Clear all dues instantly</p>
+                        </div>
+                        <div class="action-strip bg-orange-50 border-t border-orange-100 text-orange-700 absolute bottom-0 left-0">
+                            <span>Pay Last Bill</span>
+                            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <!-- 6. TRACK REQUEST (Light Card - Consistent Size) -->
+                    <div onclick="alert('Feature coming soon')" class="kiosk-card card-light cursor-pointer min-h-[280px]">
+                         <div class="p-8 flex-1 flex flex-col justify-start items-start pb-14">
+                            <div class="bg-indigo-100 p-4 rounded-xl mb-6 shadow-sm">
+                                <i data-lucide="search" class="w-10 h-10 text-indigo-600"></i>
+                            </div>
+                            <h3 id="act-track" class="text-3xl font-black text-slate-800 mb-2 tracking-tight">Track Request</h3>
+                            <p class="text-slate-500 font-bold text-sm">Check application status</p>
+                        </div>
+                         <div class="action-strip bg-indigo-50 border-t border-indigo-100 text-indigo-700 absolute bottom-0 left-0">
+                            <span>Track Complaint</span>
+                            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer / Status Bar -->
+                <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200 flex items-center justify-between z-20 relative">
+                    <button onclick="navigate('welcome')" class="bg-red-50 hover:bg-red-100 text-red-700 px-6 py-3 rounded-lg font-bold flex items-center gap-3 transition-colors border border-red-100">
+                        <i data-lucide="lock" class="w-5 h-5"></i>
+                        <span id="btn-logout">Secure Logout</span>
+                    </button>
+
+                    <!-- Alert Line -->
+                    <div class="flex-1 mx-8 text-center text-sm text-slate-600 font-medium truncate hidden sm:block">
+                        <span class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded mr-2">ALERT</span> Heavy rainfall expected in Zone 4. Please avoid low lying areas.
+                    </div>
+
+                    <!-- Countdown -->
+                    <div id="footer-countdown" class="hidden items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg border border-red-100 animate-pulse">
+                         <i data-lucide="timer" class="w-5 h-5"></i>
+                         <span class="font-bold">Auto Logout: <span id="footer-timer-val">10</span>s</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 text-slate-500 font-bold text-sm bg-slate-50 px-4 py-3 rounded-lg border border-slate-100">
+                        <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="hidden sm:inline">System Status: </span> READY
+                    </div>
+                </div>
+                
+                <!-- Preserved Hidden Elements -->
+                <div id="act-sos" class="hidden"></div>
+                <div id="act-sos-desc" class="hidden"></div>
+                <div id="txt-quick" class="hidden"></div>
+                <div id="act-complaint" class="hidden"></div>
+                <div id="act-complaint-desc" class="hidden"></div>
+
+            </div>
+        </div>
+
+        <!-- NEW 4.5 PROVIDER SELECTION SCREEN -->
+        <div id="provider-select" class="screen justify-center items-center bg-slate-100 p-6 overflow-y-auto">
+             <div class="w-full h-full flex items-center justify-center pt-28 pb-10">
+                <div class="max-w-4xl w-full bg-white rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-enter p-10">
+                    <div class="flex items-center justify-between mb-10">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-900 mb-2">Select Provider</h2>
+                            <p class="text-slate-500 text-lg">Choose your service provider / सेवा प्रदाता चुनें</p>
+                        </div>
+                        <button onclick="navigate('dashboard')" class="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
+                            <i data-lucide="x" class="w-8 h-8 text-slate-600"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="provider-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+             </div>
+        </div>
+
+        <!-- NEW 4.6 CONSUMER INPUT SCREEN -->
+        <div id="consumer-input" class="screen justify-center items-center bg-slate-100 p-6 overflow-y-auto">
+            <div class="w-full h-full flex items-center justify-center pt-28 pb-10">
+                <div class="max-w-lg w-full bg-white rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-enter">
+                     <div class="p-8 bg-slate-50 border-b border-slate-100 flex items-center gap-4">
+                        <button onclick="navigate('provider-select')" class="p-2 hover:bg-white rounded-full transition-colors"><i data-lucide="arrow-left" class="w-6 h-6 text-slate-600"></i></button>
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900" id="consumer-provider-name">Provider Name</h2>
+                            <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Enter Details</p>
+                        </div>
+                    </div>
+                    
+                    <div class="p-8">
+                        <label class="block text-sm font-bold text-slate-500 mb-2 uppercase tracking-wide">Consumer / Connection ID</label>
+                        <div class="flex justify-center mb-8">
+                            <input type="text" id="consumerInput" readonly class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl text-3xl font-mono py-4 px-4 text-center text-slate-800 tracking-widest focus:border-blue-500 outline-none" placeholder="XXXXXXXX">
+                        </div>
+
+                         <!-- Mini Keypad -->
+                        <div class="grid grid-cols-3 gap-3 mb-8">
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('1')">1</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('2')">2</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('3')">3</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('4')">4</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('5')">5</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('6')">6</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('7')">7</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('8')">8</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('9')">9</button>
+                            <button class="btn-tactile h-16 bg-amber-50 text-amber-700 font-bold rounded-lg border-b-[4px] border-amber-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="clearKey()">C</button>
+                            <button class="btn-tactile h-16 bg-white text-slate-700 text-2xl font-bold rounded-lg border-b-[4px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="addKey('0')">0</button>
+                            <button class="btn-tactile h-16 bg-red-50 text-red-600 font-bold rounded-lg border-b-[4px] border-red-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all" onclick="delKey()"><i data-lucide="delete" class="w-6 h-6"></i></button>
+                        </div>
+                        
+                        <button onclick="fetchBill()" id="fetchBtn" class="w-full py-4 bg-blue-600 text-white text-xl font-bold rounded-xl shadow-lg border-b-[4px] border-blue-800 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-3">
+                            Fetch Bill <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. SERVICE DETAIL SCREEN -->
+        <div id="service" class="screen justify-center items-center bg-slate-100 p-6 overflow-y-auto">
+             <!-- ADDED padding-top-28 to push content below fixed header -->
+             <div class="w-full h-full flex items-center justify-center pt-28 pb-10">
+                 <div class="max-w-lg w-full bg-white rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden animate-enter">
+                    <div class="p-8 border-b flex items-center gap-6 bg-slate-50">
+                        <div class="bg-white p-4 rounded-2xl shadow-sm"><i data-lucide="zap" id="serviceIcon" class="w-10 h-10 text-gray-500"></i></div>
+                        <div>
+                            <h2 id="serviceName" class="text-3xl font-black text-slate-800">Service</h2>
+                            <p id="lbl-service-util" class="text-sm text-slate-600 font-medium uppercase tracking-wide">Government Utility</p>
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex justify-between items-end mb-8">
+                            <div>
+                                <p id="lbl-total-due" class="text-slate-500 font-medium mb-1 uppercase text-xs tracking-wider">Total Outstanding</p>
+                                <span id="serviceBill" class="text-5xl font-black text-slate-800 tracking-tight">₹0</span>
+                            </div>
+                            <span id="lbl-due-date" class="px-4 py-1.5 bg-red-100 text-red-700 rounded-full text-sm font-bold mb-2">Due in 2 Days</span>
+                        </div>
+                        
+                        <div class="bg-slate-50 rounded-xl p-6 space-y-4 mb-8 border border-slate-100">
+                            <div class="flex justify-between text-sm text-slate-500">
+                                <span id="lbl-bill-date">Bill Date</span>
+                                <span class="font-mono text-slate-700 font-bold">12 Jan 2026</span>
+                            </div>
+                            <div class="flex justify-between text-sm text-slate-500">
+                                <span id="lbl-bill-num">Bill Number</span>
+                                <span class="font-mono text-slate-700 font-bold">#9928-112</span>
+                            </div>
+                             <div class="flex justify-between text-sm text-slate-500">
+                                <span id="lbl-consumer">Consumer Name</span>
+                                <span class="font-mono text-slate-700 font-bold">Arjun Sharma</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-4">
+                            <button onclick="navigate('payment')" class="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-xl shadow-lg border-b-[6px] border-blue-800 active:border-b-0 active:translate-y-1.5 transition-all flex items-center justify-center gap-3 cursor-pointer">
+                                <i data-lucide="credit-card" class="w-6 h-6"></i> <span id="btn-pay">Pay Securely</span>
+                            </button>
+                            <button onclick="navigate('dashboard')" class="w-full py-4 bg-white text-slate-600 font-bold rounded-xl border-2 border-slate-200 hover:bg-slate-50 transition-all cursor-pointer">
+                                <span id="btn-svc-cancel">Cancel</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. PAYMENT SCREEN -->
+        <div id="payment" class="screen justify-center items-center bg-slate-100 p-6 overflow-y-auto">
+             <!-- ADDED padding-top-28 to push content below fixed header -->
+            <div class="w-full h-full flex items-center justify-center pt-28 pb-10">
+                <div class="max-w-4xl w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[500px] animate-enter">
+                    <div class="w-full md:w-1/2 p-10 border-r border-slate-100 bg-slate-50 flex flex-col">
+                         <h2 id="lbl-pay-method" class="text-2xl font-bold text-slate-800 mb-8">Select Method</h2>
+                         <div class="space-y-4">
+                             <div class="p-6 bg-white border-2 border-blue-500 rounded-2xl shadow-md flex items-center gap-4 cursor-pointer transform scale-[1.02] hover:bg-blue-50 transition-colors">
+                                 <div class="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center text-blue-600"><i data-lucide="qr-code" class="w-8 h-8"></i></div>
+                                 <div class="flex-1">
+                                     <h3 class="font-bold text-lg text-slate-800">UPI / QR</h3>
+                                     <p class="text-xs text-slate-500">GPay, PhonePe, Paytm</p>
+                                 </div>
+                                 <i data-lucide="check-circle" class="text-blue-500 fill-current w-6 h-6"></i>
+                             </div>
+                         </div>
+                         <button onclick="navigate('service')" class="mt-auto flex items-center gap-2 text-slate-500 font-bold p-2 hover:text-slate-800 cursor-pointer">
+                             <i data-lucide="arrow-left" class="w-5 h-5"></i> <span id="btn-pay-cancel">Cancel</span>
+                         </button>
+                    </div>
+                    <div class="w-full md:w-1/2 p-10 flex flex-col items-center justify-center bg-white">
+                        <h2 id="lbl-scan-qr" class="text-2xl font-bold text-slate-800 mb-6">Scan QR</h2>
+                        <div class="bg-white p-4 rounded-3xl shadow-lg border-2 border-slate-100 mb-8 relative group">
+                            <div class="w-56 h-56 bg-slate-900 flex items-center justify-center rounded-2xl relative overflow-hidden">
+                                <i data-lucide="qr-code" class="w-40 h-40 text-white opacity-80"></i>
+                                <div class="absolute top-0 left-0 w-full h-2 bg-blue-500 shadow-[0_0_20px_#3b82f6] animate-[marquee_1.5s_linear_infinite]"></div>
+                            </div>
+                        </div>
+                        <button onclick="navigate('receipt')" class="px-10 py-4 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full font-bold hover:bg-emerald-100 transition-colors animate-pulse cursor-pointer">
+                            Simulate Payment Success
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. RECEIPT SCREEN -->
+        <div id="receipt" class="screen justify-center items-center bg-slate-900 overflow-y-auto">
+            <div class="relative w-full max-w-[340px] flex flex-col items-center my-auto py-10">
+                <!-- Printer Slot -->
+                <div class="w-[360px] h-14 bg-gradient-to-b from-slate-800 to-slate-900 rounded-full mb-[-20px] z-20 shadow-2xl relative border-b border-slate-700 flex items-center justify-center">
+                    <div class="w-40 h-2 bg-black/50 rounded-full"></div>
+                </div>
+                
+                <!-- Paper -->
+                <div class="bg-white w-[320px] p-8 text-center shadow-2xl relative z-10 paper-print overflow-hidden flex flex-col rounded-b-xl">
+                    <div class="border-b-2 border-dashed border-gray-300 pb-6 mb-6">
+                        <div class="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl shadow-lg">🏛</div>
+                        <h3 class="font-black text-2xl tracking-wider text-slate-900">SUVIDHA</h3>
+                        <p class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Official Receipt</p>
+                    </div>
+                    
+                    <div class="text-left text-sm font-mono space-y-3 flex-1 text-slate-600">
+                        <div class="flex justify-between"><span>Date:</span><span class="text-slate-900 font-bold">29/01/2026</span></div>
+                        <div class="flex justify-between"><span>Txn ID:</span><span class="text-slate-900 font-bold">TXN-882910</span></div>
+                        <div class="border-b border-slate-100 my-2"></div>
+                        <div class="flex justify-between font-bold text-xl text-slate-900"><span>PAID:</span><span>₹1,240</span></div>
+                    </div>
+                    
+                    <div class="mt-8 pt-4 border-t-2 border-slate-900">
+                        <i data-lucide="check-circle" class="w-12 h-12 mx-auto text-green-600 mb-2"></i>
+                        <p id="lbl-payment-success" class="text-xs font-bold text-green-700 uppercase">Payment Successful</p>
+                    </div>
+                    
+                    <!-- Jagged Edge -->
+                    <div class="absolute bottom-0 left-0 w-full h-3 bg-slate-900" style="clip-path: polygon(0% 100%, 2% 0%, 4% 100%, 6% 0%, 8% 100%, 10% 0%, 12% 100%, 14% 0%, 16% 100%, 18% 0%, 20% 100%, 22% 0%, 24% 100%, 26% 0%, 28% 100%, 30% 0%, 32% 100%, 34% 0%, 36% 100%, 38% 0%, 40% 100%, 42% 0%, 44% 100%, 46% 0%, 48% 100%, 50% 0%, 52% 100%, 54% 0%, 56% 100%, 58% 0%, 60% 100%, 62% 0%, 64% 100%, 66% 0%, 68% 100%, 70% 0%, 72% 100%, 74% 0%, 76% 100%, 78% 0%, 80% 100%, 82% 0%, 84% 100%, 86% 0%, 88% 100%, 90% 0%, 92% 100%, 94% 0%, 96% 100%, 98% 0%, 100% 100%);"></div>
+                </div>
+            </div>
+            
+            <button onclick="navigate('dashboard')" class="mt-10 px-10 py-4 bg-white text-slate-900 rounded-full font-bold hover:bg-blue-50 transition-colors shadow-[0_0_40px_rgba(255,255,255,0.2)] cursor-pointer">
+                <span id="btn-receipt-home">Collect & Home</span>
+            </button>
+        </div>
+
+        <!-- 8. ADMIN SCREEN -->
+        <div id="admin" class="screen justify-center items-center bg-slate-100 p-8">
+             <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 text-center">
+                 <h2 class="text-2xl font-bold mb-6 text-slate-800">Admin Panel</h2>
+                 <p class="mb-6 text-slate-500">Restricted Access Area</p>
+                 <button onclick="navigate('welcome')" class="px-6 py-2 bg-red-100 text-red-600 rounded-lg font-bold hover:bg-red-200 cursor-pointer">Exit Admin</button>
+             </div>
+        </div>
+
+        <!-- Logout Warning (Updated to bottom right toast) -->
+        <div id="logout-warning" class="hidden fixed bottom-6 right-6 z-[60] flex-col items-end gap-2">
+             <div class="bg-white rounded-2xl p-6 shadow-2xl border-4 border-red-500 animate-pulse w-[280px]">
+                <div class="flex items-center gap-4 mb-2">
+                     <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                        <i data-lucide="timer" class="w-6 h-6"></i>
+                    </div>
+                    <div class="text-left">
+                        <h2 class="font-black text-slate-900 leading-tight">Auto Logout</h2>
+                        <div class="text-3xl font-black text-red-600 font-mono" id="logout-countdown">10</div>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mb-3">No activity detected.</p>
+                <button onclick="resetIdleTimer()" class="w-full py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-colors text-sm cursor-pointer">
+                    I'm here / यहीं हूँ
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        // Init Icons
+        lucide.createIcons();
+
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }, 1000);
+
+        // --- AUTO LOGOUT / IDLE TIMER LOGIC (UPDATED FOR VISIBILITY) ---
+        // Setting to 2 minutes (120 seconds) as per existing logic, but made visible
+        const IDLE_LIMIT_SECONDS = 300; 
+        let secondsRemaining = IDLE_LIMIT_SECONDS;
+        let globalInterval;
+
+        // Function to start the visible countdown
+        function startGlobalIdleTimer() {
+            if (globalInterval) clearInterval(globalInterval);
+            
+            globalInterval = setInterval(() => {
+                // Decrement
+                secondsRemaining--;
+
+                // Update Header Display
+                updateTimerDisplay();
+
+                // Warning Threshold (10 seconds remaining)
+                if (secondsRemaining === 10) {
+                    showLogoutWarning();
+                }
+
+                // Logout Threshold
+                if (secondsRemaining <= 0) {
+                    performAutoLogout();
+                }
+            }, 1000);
+        }
+
+        // Reset the timer on interaction
+        function resetIdleTimer() {
+            secondsRemaining = IDLE_LIMIT_SECONDS;
+            updateTimerDisplay();
+            
+            // Hide warnings if they were open
+            const warningModal = document.getElementById('logout-warning');
+            const footerTimer = document.getElementById('footer-countdown');
+            
+            if (warningModal && !warningModal.classList.contains('hidden')) {
+                warningModal.classList.add('hidden');
+                warningModal.classList.remove('flex');
+            }
+            if (footerTimer && !footerTimer.classList.contains('hidden')) {
+                footerTimer.classList.add('hidden');
+                footerTimer.classList.remove('flex');
+            }
+        }
+
+        // Update the visual elements
+        function updateTimerDisplay() {
+            const minutes = Math.floor(secondsRemaining / 60);
+            const seconds = secondsRemaining % 60;
+            const displayString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            // Update Header Timer
+            const headerTimer = document.getElementById('header-timer');
+            if(headerTimer) headerTimer.innerText = displayString;
+            
+            // Also update the warning countdowns if they are visible
+            const countdownSpan = document.getElementById('logout-countdown');
+            const footerVal = document.getElementById('footer-timer-val');
+            
+            if(countdownSpan) countdownSpan.innerText = secondsRemaining;
+            if(footerVal) footerVal.innerText = secondsRemaining;
+        }
+
+        function showLogoutWarning() {
+            const warningModal = document.getElementById('logout-warning');
+            const footerTimer = document.getElementById('footer-countdown');
+            
+            // Check active screen
+            const activeScreen = document.querySelector('.screen.active');
+            
+            if (activeScreen && activeScreen.id === 'dashboard') {
+                // Show Footer Version
+                if(footerTimer) {
+                    footerTimer.classList.remove('hidden');
+                    footerTimer.classList.add('flex');
+                }
+            } else {
+                // Show Global Toast Version
+                if(warningModal) {
+                    warningModal.classList.remove('hidden');
+                    warningModal.classList.add('flex');
+                }
+            }
+        }
+
+        function performAutoLogout() {
+             console.log("Auto-logout complete");
+             // Hide all warnings
+             const warningModal = document.getElementById('logout-warning');
+             const footerTimer = document.getElementById('footer-countdown');
+             
+             if(warningModal) {
+                 warningModal.classList.add('hidden');
+                 warningModal.classList.remove('flex');
+             }
+             if(footerTimer) {
+                 footerTimer.classList.add('hidden');
+                 footerTimer.classList.remove('flex');
+             }
+
+             navigate('welcome');
+        }
+
+        // Attach Event Listeners to Reset Timer on User Interaction
+        window.onload = () => {
+            document.addEventListener('click', resetIdleTimer);
+            document.addEventListener('touchstart', resetIdleTimer);
+            document.addEventListener('keypress', resetIdleTimer);
+            document.addEventListener('mousemove', resetIdleTimer);
+            document.addEventListener('scroll', resetIdleTimer);
+            
+            // NEW: PC Keyboard Listener
+            document.addEventListener('keydown', handlePhysicalKeyboard);
+
+            // START TIMER
+            startGlobalIdleTimer();
+            updateTimerDisplay();
+        };
+
+        // --- NEW: PHYSICAL KEYBOARD HANDLER (PC Friendly) ---
+        function handlePhysicalKeyboard(e) {
+            // Process based on screen mode
+            if (!['MOBILE', 'OTP', 'CONSUMER'].includes(currentScreenMode)) return;
+            
+            const key = e.key;
+
+            // Numbers
+            if (key >= '0' && key <= '9') {
+                addKey(key);
+            }
+            // Backspace
+            else if (key === 'Backspace') {
+                delKey();
+            }
+            // Enter
+            else if (key === 'Enter') {
+                e.preventDefault();
+                if(currentScreenMode === 'MOBILE') {
+                    if(mobileNumber.length === 10) requestOtp();
+                } else if(currentScreenMode === 'OTP') {
+                     if(otpNumber.length === 4) verifyOtp();
+                } else if(currentScreenMode === 'CONSUMER') {
+                    fetchBill();
+                }
+            }
+            
+            resetIdleTimer();
+        }
+
+
+        // --- TRANSLATIONS (Complete) ---
+        const translations = {
+            EN: {
+                welcome: "Namaste, Arjun",
+                lastLogin: "Last Login: Today, 10:45 AM",
+                totalDue: "Total Outstanding",
+                elec: "Electricity Services",
+                water: "Water & Sanitation",
+                gas: "Gas Services",
+                muni: "Municipal Complaints",
+                payBills: "Pay Bills",
+                trackReq: "Track Request",
+                
+                quick: "Emergency Services", // Renamed label
+                complaint: "Grievance",
+                compDesc: "Register new complaint",
+                sos: "Emergency SOS",
+                sosDesc: "Police, Fire, Ambulance (112)",
+                
+                loginTitle: "Login",
+                loginSub: "Enter your 10-digit mobile number",
+                loginBtn: "VERIFY & PROCEED",
+                sideTitle: "Secure Citizen Authentication",
+                sideDesc: "Access electricity, water, gas, and municipal services.",
+                logout: "Secure Logout",
+                serviceUtility: "Government Utility",
+                totalOut: "Total Outstanding",
+                dueDays: "Due in 2 Days",
+                billDate: "Bill Date",
+                billNum: "Bill Number",
+                consumer: "Consumer Name",
+                payBtn: "Pay Securely",
+                cancelBtn: "Cancel",
+                payMethod: "Select Method",
+                scanQr: "Scan QR",
+                paySuccess: "Payment Successful",
+                homeBtn: "Collect & Home",
+                otpSideTitle: "Identity Verification",
+                otpSideDesc: "We have sent a 4-digit One Time Password (OTP) to your mobile.",
+                otpTitle: "Enter OTP",
+                otpSub: "Sent to +91 ",
+                otpBtn: "CONFIRM OTP",
+                otpResend: "Resend OTP (30s)"
+            },
+            HI: {
+                welcome: "नमस्ते, अर्जुन",
+                lastLogin: "पिछला लॉगिन: आज, 10:45 AM",
+                totalDue: "कुल बकाया राशि",
+                elec: "बिजली सेवाएँ",
+                water: "पानी और स्वच्छता",
+                gas: "गैस सेवाएँ",
+                muni: "नगर निगम शिकायत",
+                payBills: "बिल भुगतान",
+                trackReq: "अनुरोध ट्रैक करें",
+                
+                quick: "आपातकालीन सेवाएँ",
+                complaint: "शिकायत",
+                compDesc: "नई शिकायत दर्ज करें",
+                sos: "आपातकालीन सेवा",
+                sosDesc: "पुलिस, फायर, एम्बुलेंस (112)",
+                
+                loginTitle: "लॉगिन",
+                loginSub: "अपना 10-अंकीय मोबाइल नंबर दर्ज करें",
+                loginBtn: "सत्यापित करें",
+                sideTitle: "सुरक्षित नागरिक प्रमाणीकरण",
+                sideDesc: "बिजली, पानी, गैस और नगरपालिका सेवाओं का उपयोग करें।",
+                logout: "सुरक्षित लॉगआउट",
+                serviceUtility: "सरकारी सेवा",
+                totalOut: "कुल बकाया राशि",
+                dueDays: "2 दिनों में देय",
+                billDate: "बिल दिनांक",
+                billNum: "बिल नंबर",
+                consumer: "उपभोक्ता का नाम",
+                payBtn: "सुरक्षित भुगतान करें",
+                cancelBtn: "रद्द करें",
+                payMethod: "भुगतान विधि चुनें",
+                scanQr: "भुगतान के लिए स्कैन करें",
+                paySuccess: "भुगतान सफल",
+                homeBtn: "रसीद लें और घर जाएँ",
+                otpSideTitle: "पहचान सत्यापन",
+                otpSideDesc: "हमने आपके मोबाइल पर 4 अंकों का वन टाइम पासवर्ड (OTP) भेजा है।",
+                otpTitle: "OTP दर्ज करें",
+                otpSub: "OTP भेजा गया: +91 ",
+                otpBtn: "OTP पुष्टि करें",
+                otpResend: "OTP पुनः भेजें (30s)"
+            }
+        };
+
+        let currentLang = 'EN';
+        let currentScreenMode = 'MOBILE'; // 'MOBILE', 'OTP', 'CONSUMER'
+
+        // --- NAVIGATION ENGINE ---
+        function navigate(screenId) {
+            // Reset flow state when going back to login or welcome
+            if(screenId === 'login') {
+                currentScreenMode = 'MOBILE';
+                otpNumber = "";
+                updateOtpInput();
+            }
+            
+            // Reset consumer input when leaving flow
+            if(screenId === 'dashboard') {
+                consumerNumber = "";
+                if(document.getElementById('consumerInput')) document.getElementById('consumerInput').value = "";
+            }
+
+            // Hide all
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            // Show Target
+            const target = document.getElementById(screenId);
+            if(target) {
+                target.classList.add('active');
+            }
+            
+            // Header Visibility Logic
+            const header = document.getElementById('header');
+            if(['dashboard', 'service', 'payment', 'provider-select', 'consumer-input'].includes(screenId)) {
+                header.classList.remove('hidden');
+            } else {
+                header.classList.add('hidden');
+            }
+
+            // Receipt Animation Reset
+            if(screenId === 'receipt') {
+                const paper = document.querySelector('.paper-print');
+                paper.style.animation = 'none';
+                paper.offsetHeight; /* trigger reflow */
+                paper.style.animation = 'printScroll 2.5s ease-out forwards';
+            }
+
+            // Trigger Idle Timer Check on Navigation
+            resetIdleTimer();
+        }
+
+        // --- LANGUAGE ENGINE ---
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+
+            // 1. Dashboard
+            document.getElementById('dash-welcome').innerText = t.welcome;
+            document.getElementById('dash-lastlogin').innerText = t.lastLogin;
+            document.getElementById('txt-totaldue').innerText = t.totalDue;
+            
+            document.getElementById('svc-electricity').innerHTML = t.elec.replace(' ', '<br>');
+            document.getElementById('svc-water').innerHTML = t.water.replace(' & ', '<br>').replace(' और ', '<br>');
+            document.getElementById('svc-gas').innerHTML = t.gas.replace(' ', '<br>');
+            document.getElementById('svc-municipal').innerHTML = t.muni.replace(' ', '<br>');
+            
+            document.getElementById('act-paybills').innerText = t.payBills;
+            document.getElementById('act-track').innerText = t.trackReq;
+            
+            document.getElementById('txt-quick').innerText = t.quick;
+            document.getElementById('act-sos').innerText = t.sos;
+            document.getElementById('act-sos-desc').innerText = t.sosDesc;
+            document.getElementById('btn-logout').innerText = t.logout;
+
+            // 2. Login
+            document.getElementById('login-title').innerText = t.loginTitle;
+            document.getElementById('login-subtitle').innerText = t.loginSub;
+            document.getElementById('login-btn-text').innerText = t.loginBtn;
+            document.getElementById('login-side-title').innerText = t.sideTitle;
+            document.getElementById('login-side-desc').innerText = t.sideDesc;
+
+            // 3. OTP (New)
+            document.getElementById('otp-side-title').innerText = t.otpSideTitle;
+            document.getElementById('otp-side-desc').innerText = t.otpSideDesc;
+            document.getElementById('otp-title').innerText = t.otpTitle;
+            document.getElementById('otp-btn-text').innerText = t.otpBtn;
+            document.getElementById('otp-resend').innerText = t.otpResend;
+
+            // 4. Service Detail
+            document.getElementById('lbl-service-util').innerText = t.serviceUtility;
+            document.getElementById('lbl-total-due').innerText = t.totalOut;
+            document.getElementById('lbl-due-date').innerText = t.dueDays;
+            document.getElementById('lbl-bill-date').innerText = t.billDate;
+            document.getElementById('lbl-bill-num').innerText = t.billNum;
+            document.getElementById('lbl-consumer').innerText = t.consumer;
+            document.getElementById('btn-pay').innerText = t.payBtn;
+            document.getElementById('btn-svc-cancel').innerText = t.cancelBtn;
+
+            // 5. Payment
+            document.getElementById('lbl-pay-method').innerText = t.payMethod;
+            document.getElementById('lbl-scan-qr').innerText = t.scanQr;
+            document.getElementById('btn-pay-cancel').innerText = t.cancelBtn;
+
+            // 6. Receipt
+            document.getElementById('lbl-payment-success').innerText = t.paySuccess;
+            document.getElementById('btn-receipt-home').innerText = t.homeBtn;
+
+            // Go to Login
+            navigate('login');
+        }
+
+        // --- KEYPAD LOGIC (SHARED) ---
+        let mobileNumber = "";
+        let otpNumber = "";
+        let consumerNumber = "";
+        
+        function updateInput() {
+            const input = document.getElementById('mobileInput');
+            const btn = document.getElementById('loginBtn');
+            input.value = mobileNumber;
+            
+            if(mobileNumber.length === 10) {
+                btn.classList.remove('opacity-70', 'pointer-events-none');
+                btn.classList.add('bg-blue-700', 'hover:bg-blue-800', 'active:border-b-0', 'active:translate-y-1.5');
+            } else {
+                btn.classList.add('opacity-70', 'pointer-events-none');
+                btn.classList.remove('bg-blue-700', 'hover:bg-blue-800', 'active:border-b-0', 'active:translate-y-1.5');
+            }
+        }
+
+        function updateOtpInput() {
+            const input = document.getElementById('otpInput');
+            const btn = document.getElementById('otpBtn');
+            input.value = otpNumber;
+            
+            if(otpNumber.length === 4) {
+                btn.classList.remove('opacity-70', 'pointer-events-none');
+                btn.classList.add('bg-blue-700', 'hover:bg-blue-800', 'active:border-b-0', 'active:translate-y-1.5');
+            } else {
+                btn.classList.add('opacity-70', 'pointer-events-none');
+                btn.classList.remove('bg-blue-700', 'hover:bg-blue-800', 'active:border-b-0', 'active:translate-y-1.5');
+            }
+        }
+
+        function updateConsumerInput() {
+            const input = document.getElementById('consumerInput');
+            input.value = consumerNumber;
+        }
+
+        function addKey(key) {
+            if (currentScreenMode === 'MOBILE') {
+                if(mobileNumber.length < 10) {
+                    mobileNumber += key;
+                    updateInput();
+                }
+            } else if (currentScreenMode === 'OTP') {
+                if(otpNumber.length < 4) {
+                    otpNumber += key;
+                    updateOtpInput();
+                }
+            } else if (currentScreenMode === 'CONSUMER') {
+                if(consumerNumber.length < 12) {
+                    consumerNumber += key;
+                    updateConsumerInput();
+                }
+            }
+        }
+
+        function delKey() {
+            if (currentScreenMode === 'MOBILE') {
+                mobileNumber = mobileNumber.slice(0, -1);
+                updateInput();
+            } else if (currentScreenMode === 'OTP') {
+                otpNumber = otpNumber.slice(0, -1);
+                updateOtpInput();
+            } else if (currentScreenMode === 'CONSUMER') {
+                consumerNumber = consumerNumber.slice(0, -1);
+                updateConsumerInput();
+            }
+        }
+
+        function clearKey() {
+            if (currentScreenMode === 'MOBILE') {
+                mobileNumber = "";
+                updateInput();
+            } else if (currentScreenMode === 'OTP') {
+                otpNumber = "";
+                updateOtpInput();
+            } else if (currentScreenMode === 'CONSUMER') {
+                consumerNumber = "";
+                updateConsumerInput();
+            }
+        }
+
+        function requestOtp() {
+            // Move to OTP Screen
+            currentScreenMode = 'OTP';
+            
+            // Update Subtitle with Phone Number
+            const t = translations[currentLang];
+            document.getElementById('otp-subtitle').innerText = t.otpSub + mobileNumber;
+            
+            navigate('otp');
+        }
+
+        function verifyOtp() {
+            // Verify Logic (Dummy)
+            otpNumber = "";
+            mobileNumber = "";
+            updateInput();
+            updateOtpInput();
+            
+            // Reset mode for next time
+            currentScreenMode = 'MOBILE';
+            navigate('dashboard');
+        }
+
+        // --- NEW SERVICE FLOW LOGIC ---
+        
+        let selectedServiceType = '';
+        let selectedServiceBill = 0;
+        let selectedProviderName = '';
+
+        // Provider Data
+        const providers = {
+            'elec': [
+                { name: 'Adani Electricity', icon: 'zap' },
+                { name: 'Tata Power DDL', icon: 'zap' },
+                { name: 'BSES Rajdhani', icon: 'zap' },
+                { name: 'BSES Yamuna', icon: 'zap' },
+                { name: 'NPDCL North', icon: 'zap' },
+                { name: 'SPDCL South', icon: 'zap' }
+            ],
+            'water': [
+                { name: 'Delhi Jal Board', icon: 'droplets' },
+                { name: 'Municipal Corp.', icon: 'droplets' },
+                { name: 'UP Jal Nigam', icon: 'droplets' },
+                { name: 'PHED Water', icon: 'droplets' }
+            ],
+            'gas': [
+                { name: 'Indraprastha Gas', icon: 'flame' },
+                { name: 'Mahanagar Gas', icon: 'flame' },
+                { name: 'Adani Gas Ltd', icon: 'flame' },
+                { name: 'Gujarat Gas', icon: 'flame' },
+                { name: 'Indane Piped', icon: 'flame' }
+            ],
+            'muni': [
+                { name: 'Municipal Corp (North)', icon: 'building' },
+                { name: 'Municipal Corp (South)', icon: 'building' },
+                { name: 'Municipal Corp (East)', icon: 'building' },
+                { name: 'Cantonment Board', icon: 'building' }
+            ]
+        };
+
+        // Step 1: Init Flow -> Show Provider Select
+        function initServiceFlow(key, bill, colorClass, bgClass) {
+            selectedServiceType = key;
+            selectedServiceBill = bill;
+            
+            // Populate Providers
+            const grid = document.getElementById('provider-grid');
+            grid.innerHTML = '';
+            
+            const list = providers[key] || [];
+            
+            list.forEach(prov => {
+                const div = document.createElement('div');
+                div.className = "flex flex-col items-center justify-center p-6 bg-slate-50 border-2 border-slate-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group h-40";
+                div.onclick = () => selectProvider(prov.name);
+                
+                div.innerHTML = `
+                    <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="${prov.icon}" class="w-8 h-8 text-blue-600"></i>
+                    </div>
+                    <span class="font-bold text-slate-700 text-center leading-tight group-hover:text-blue-700">${prov.name}</span>
+                `;
+                grid.appendChild(div);
+            });
+            
+            lucide.createIcons();
+            navigate('provider-select');
+        }
+
+        // Step 2: Select Provider -> Show Input
+        function selectProvider(name) {
+            selectedProviderName = name;
+            document.getElementById('consumer-provider-name').innerText = name;
+            
+            // Reset Input
+            consumerNumber = "";
+            updateConsumerInput();
+            currentScreenMode = 'CONSUMER';
+            
+            navigate('consumer-input');
+        }
+
+        // Step 3: Fetch Bill -> Show Service Details
+        function fetchBill() {
+            // Validation (optional)
+            if(consumerNumber.length < 4) {
+                // Shake effect or alert could go here
+                return; 
+            }
+
+            // Get translated name using key, fallback to key if missing
+            const key = selectedServiceType;
+            const name = translations[currentLang][key] || key;
+            
+            document.getElementById('serviceName').innerHTML = name.replace('<br>', ' ') + '<br><span class="text-lg text-slate-400 font-normal">' + selectedProviderName + '</span>';
+            document.getElementById('serviceBill').innerText = "₹" + selectedServiceBill;
+            
+            // Dynamic Icon Color
+            const icon = document.getElementById('serviceIcon');
+            icon.className = `w-10 h-10 text-slate-500`; 
+            
+            navigate('service');
+        }
+
+        // Legacy function for direct calls (if any)
+        function openService(key, bill, colorClass, bgClass) {
+           initServiceFlow(key, bill, colorClass, bgClass);
+        }
+
+    </script>
+</body>
+</html>

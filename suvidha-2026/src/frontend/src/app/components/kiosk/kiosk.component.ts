@@ -8,6 +8,10 @@ import { Component } from '@angular/core';
 export class KioskComponent {
   // Define properties and methods for the kiosk interface here
 
+  selectService(service: string) {
+    console.log('Service selected:', service);
+  }
+
   constructor() {
     // Initialize any necessary data or services
   }

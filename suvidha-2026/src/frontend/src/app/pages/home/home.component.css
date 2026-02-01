@@ -1,0 +1,74 @@
+.container { 
+  padding: 24px; 
+}
+
+h1 {
+  margin-bottom: 6px;
+}
+
+.subtitle { 
+  color: #555; 
+  margin-bottom: 20px; 
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 30px;
+  padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  margin-bottom: 24px;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 16px;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.card {
+  padding: 22px;
+  border-radius: 14px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.electricity { background: linear-gradient(135deg, #2f80ed, #56ccf2); }
+.gas { background: linear-gradient(135deg, #27ae60, #6fcf97); }
+.water { background: linear-gradient(135deg, #2d9cdb, #56ccf2); }
+.municipal { background: linear-gradient(135deg, #eb5757, #f2994a); }
+.bills { background: linear-gradient(135deg, #f2994a, #f2c94c); }
+.track { background: linear-gradient(135deg, #9b51e0, #bb6bd9); }
+
+.quick-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.quick-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: white;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+.notice {
+  margin-top: 24px;
+  background: #1e5aa8;
+  color: #fff;
+  padding: 12px;
+  border-radius: 10px;
+}

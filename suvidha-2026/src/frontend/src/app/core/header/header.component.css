@@ -1,0 +1,23 @@
+.top-bar {
+  height: 64px;
+  background: linear-gradient(90deg, #1e5aa8, #2f80ed);
+  color: #fff;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.logo span {
+  color: #ffcc00;
+}
+
+.lang {
+  font-size: 14px;
+  cursor: pointer;
+}
