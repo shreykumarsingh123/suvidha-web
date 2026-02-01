@@ -1,6 +1,8 @@
+import { Request, Response } from 'express';
+
 export class HelpdeskController {
     // Method to create a new ticket
-    public async createTicket(req, res) {
+    public async createTicket(req: Request, res: Response) {
         try {
             // Logic to create a ticket
             res.status(201).json({ message: 'Ticket created successfully' });
@@ -9,8 +11,19 @@ export class HelpdeskController {
         }
     }
 
+    // Method to get a specific ticket
+    public async getTicket(req: Request, res: Response) {
+        try {
+            const ticketId = req.params.id;
+            // Logic to get ticket
+            res.status(200).json({ message: `Retrieved ticket ${ticketId}` });
+        } catch (error) {
+            res.status(500).json({ message: 'Error retrieving ticket', error });
+        }
+    }
+
     // Method to get all tickets
-    public async getAllTickets(req, res) {
+    public async getAllTickets(req: Request, res: Response) {
         try {
             // Logic to retrieve all tickets
             res.status(200).json({ message: 'Retrieved all tickets' });
@@ -20,7 +33,7 @@ export class HelpdeskController {
     }
 
     // Method to update a ticket
-    public async updateTicket(req, res) {
+    public async updateTicket(req: Request, res: Response) {
         try {
             const ticketId = req.params.id;
             // Logic to update the ticket
@@ -31,7 +44,7 @@ export class HelpdeskController {
     }
 
     // Method to delete a ticket
-    public async deleteTicket(req, res) {
+    public async deleteTicket(req: Request, res: Response) {
         try {
             const ticketId = req.params.id;
             // Logic to delete the ticket

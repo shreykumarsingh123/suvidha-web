@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import HelpdeskController from '../controllers/helpdesk.controller';
+import { HelpdeskController } from '../controllers/helpdesk.controller';
 import authRoutes from './auth.routes';
 
 const router = Router();

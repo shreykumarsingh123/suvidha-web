@@ -50,10 +50,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "development": {
-              "browserTarget": "suvidha-2026:build:development"
+              "buildTarget": "suvidha-2026:build:development"
             },
             "production": {
-              "browserTarget": "suvidha-2026:build:production"
+              "buildTarget": "suvidha-2026:build:production"
             }
           },
           "defaultConfiguration": "development"
@@ -61,5 +61,8 @@
       }
     }
   },
-  "defaultProject": "suvidha-2026"
+  "defaultProject": "suvidha-2026",
+  "cli": {
+    "analytics": false
+  }
 }
