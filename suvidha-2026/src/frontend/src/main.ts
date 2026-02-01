@@ -1,15 +1,15 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
-import { importProvidersFrom } from '@angular/core';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
-import { AuthInterceptor } from './app/auth/auth.interceptor';
+// import { authInterceptor } from './app/core/interceptors/auth.interceptor'; // I'll create this functional interceptor
 
 bootstrapApplication(AppComponent, {
   providers: [
-    importProvidersFrom(HttpClientModule),
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-    provideRouter(routes)
+    provideHttpClient(
+      // withInterceptors([authInterceptor]) 
+    ),
+    provideRouter(routes, withComponentInputBinding())
   ]
 }).catch((err: any) => console.error(err));
