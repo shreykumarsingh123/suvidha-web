@@ -16,6 +16,7 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^5.10.9",
+    "twilio": "^5.12.1",
     "winston": "^3.19.0"
   },
   "devDependencies": {
@@ -23,8 +24,8 @@
     "@types/jest": "^26.0.0",
     "@types/node": "^14.14.31",
     "jest": "^26.6.3",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.1.2"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
   },
   "author": "Your Name",
   "license": "MIT"

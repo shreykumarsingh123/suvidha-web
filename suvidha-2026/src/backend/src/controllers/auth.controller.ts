@@ -1,37 +1,23 @@
 import { Request, Response } from 'express';
-import User from '../models/user.model';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
-
-
-// Mock function to generate OTP
-const generateOTP = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
-};
+import User from '../models/user.model';
+import {
+    requestOtpService,
+    verifyOtpService,
+    resendOtpService,
+} from '../services/otp.service';
 
 export const requestOtp = async (req: Request, res: Response): Promise<void> => {
     try {
         const { mobileNumber } = req.body;
-        if (!mobileNumber) {
-            res.status(400).json({ message: 'Mobile number is required' });
-            return;
+        const result = await requestOtpService(mobileNumber);
+
+        if (result.success) {
+            res.status(200).json({ message: result.message });
+        } else {
+            res.status(400).json({ message: result.message });
         }
-
-        const otp = generateOTP();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-        let user = await User.findOne({ mobileNumber });
-        if (!user) {
-            user = new User({ mobileNumber });
-        }
-
-        user.otp = otp;
-        user.otpExpires = otpExpires;
-        await user.save();
-
-        logger.info(`OTP for ${mobileNumber} is ${otp}`);
-
-        res.status(200).json({ message: 'OTP sent successfully' });
     } catch (error) {
         logger.error('Error in requestOtp:', error);
         res.status(500).json({ message: 'Internal server error' });
@@ -62,29 +48,41 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Clear OTP
-        user.otp = undefined as any;
-        user.otpExpires = undefined as any;
-        user.lastLogin = new Date();
-        await user.save();
+        const result = await verifyOtpService(mobileNumber, otp);
+
+        if (!result.success) {
+            res.status(400).json({ message: result.message });
+            return;
+        }
 
         const token = jwt.sign(
-            { id: user._id, mobileNumber: user.mobileNumber },
+            { id: result.user.id, mobileNumber: result.user.mobileNumber },
             process.env.JWT_SECRET || 'secret',
             { expiresIn: '1d' }
         );
 
         res.status(200).json({
             token,
-            user: {
-                id: user._id,
-                mobileNumber: user.mobileNumber,
-                lastLogin: user.lastLogin
-            }
+            user: result.user,
         });
-
     } catch (error) {
         logger.error('Error in verifyOtp:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const resendOtp = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { mobileNumber } = req.body;
+        const result = await resendOtpService(mobileNumber);
+
+        if (result.success) {
+            res.status(200).json({ message: result.message });
+        } else {
+            res.status(400).json({ message: result.message });
+        }
+    } catch (error) {
+        logger.error('Error in resend OTP:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

@@ -19,20 +19,34 @@ export class ApiService {
     };
   }
 
+  // 👤 User APIs
   getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/users`).pipe(catchError(this.handleError('getUsers')));
+    return this.http.get<User[]>(`${this.apiUrl}/users`)
+      .pipe(catchError(this.handleError('getUsers')));
   }
 
   createUser(user: User): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/users`, user).pipe(catchError(this.handleError('createUser')));
+    return this.http.post<User>(`${this.apiUrl}/users`, user)
+      .pipe(catchError(this.handleError('createUser')));
   }
 
-  // Generic GET helper for other typed endpoints
+  // 🔧 Generic helpers
   get<T>(path: string): Observable<T> {
-    return this.http.get<T>(`${this.apiUrl}/${path}`).pipe(catchError(this.handleError(`GET ${path}`)));
+    return this.http.get<T>(`${this.apiUrl}/${path}`)
+      .pipe(catchError(this.handleError(`GET ${path}`)));
   }
 
   post<T, R = T>(path: string, body: T): Observable<R> {
-    return this.http.post<R>(`${this.apiUrl}/${path}`, body).pipe(catchError(this.handleError(`POST ${path}`)));
+    return this.http.post<R>(`${this.apiUrl}/${path}`, body)
+      .pipe(catchError(this.handleError(`POST ${path}`)));
+  }
+
+  // 🔑 OTP Auth APIs
+  requestOtp(mobileNumber: string): Observable<any> {
+    return this.post<{ mobileNumber: string }, any>('auth/request-otp', { mobileNumber });
+  }
+
+  verifyOtp(mobileNumber: string, otp: string): Observable<any> {
+    return this.post<{ mobileNumber: string; otp: string }, any>('auth/verify-otp', { mobileNumber, otp });
   }
 }

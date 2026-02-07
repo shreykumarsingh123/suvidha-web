@@ -1,6 +1,8 @@
 module.exports = {
-    plugins: {
-        '@tailwindcss/postcss': {},
-        autoprefixer: {},
-    },
+  plugins: {
+    '@tailwindcss/postcss': {},   // ✅ correct plugin for Angular CLI
+    autoprefixer: {},
+  },
 }
+
+
