@@ -50,7 +50,7 @@ import { AuthService } from '../../../core/services/auth.service';
                         <button class="btn-tactile h-20 bg-amber-50 text-amber-700 font-bold rounded-xl border-b-[6px] border-amber-200 shadow-sm flex items-center justify-center text-lg active:border-b-0 active:translate-y-2 transition-all cursor-pointer" (click)="clearKey()">CLR</button>
                         <button (click)="addKey('0')" class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer">0</button>
                         <button class="btn-tactile h-20 bg-red-50 text-red-600 font-bold rounded-xl border-b-[6px] border-red-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" (click)="delKey()">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                         </button>
                     </div>
 

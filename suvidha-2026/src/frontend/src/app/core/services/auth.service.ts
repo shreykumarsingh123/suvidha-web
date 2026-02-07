@@ -36,7 +36,6 @@ export class AuthService {
             console.log('Demo: OTP verification for', mobileNumber, otp);
             const demoUser = {
                 id: '1',
-                name: 'Arjun Sharma',
                 mobile: mobileNumber
             };
             
