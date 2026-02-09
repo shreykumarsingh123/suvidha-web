@@ -1,0 +1,96 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Build outputs
+dist/
+.angular/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+logs/
+
+# Cache directories
+.angular/cache/
+/.sass-cache
+/.cache
+.parcel-cache/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Package lock files (optional - uncomment if using npm only)
+# package-lock.json
+
+# Package manager lock files
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
+turbo-lock.json
+
+# Temporary files
+tmp/
+temp/
+*.tgz
+*.tmp
+*.temp
+
+# TypeScript
+*.tsbuildinfo
+*.eng.ts
+
+# IDE specific
+*.suo
+*.user
+*.userosscache
+*.njsproj
+*.sln
+*.sw?
+
+# Project files
+.classpath
+.project
+.settings
+.eslintcache
+
+# Reports
+Reports/
+report/
+htmlcov/
+
+# Serverless
+.serverless/
+.serverless/
+
+# Misc
+*.local
+*.pid
+*.pid.*
+.seed
+*.log.orig
+regression/
