@@ -25,5 +25,5 @@ export const connectPostgres = async (): Promise<void> => {
 };
 
 export const query = <T>(text: string, params?: Array<unknown>) => {
-    return pool.query<T>(text, params);
+    return pool.query(text, params) as unknown as { rows: T[] };
 };

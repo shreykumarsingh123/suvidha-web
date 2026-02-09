@@ -11,11 +11,11 @@ const getKey = (): Buffer => {
     }
 
     const decoded = Buffer.from(key, 'base64');
-    if (decoded.length !== 32) {
-        throw new Error('DATA_ENCRYPTION_KEY must be a 32-byte base64-encoded value');
+    if (decoded.length === 32) {
+        return decoded;
     }
 
-    return decoded;
+    return crypto.createHash('sha256').update(key, 'utf8').digest();
 };
 
 export const encryptValue = (plainText: string): string => {

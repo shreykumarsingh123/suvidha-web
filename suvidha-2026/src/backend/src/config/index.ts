@@ -28,7 +28,7 @@ export const config = {
         expiresIn: process.env.JWT_EXPIRES_IN || '1h',
     },
     encryption: {
-        key: process.env.DATA_ENCRYPTION_KEY || '',
+        key: process.env.DATA_ENCRYPTION_KEY || 'secret',
     },
 };
 

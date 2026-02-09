@@ -4,7 +4,7 @@ const logger = createLogger({
     level: 'info',
     format: format.combine(
         format.timestamp(),
-        format.printf(({ timestamp, level, message }) => {
+        format.printf(({ timestamp, level, message }: { timestamp: string; level: string; message: string }) => {
             return `${timestamp} [${level}]: ${message}`;
         })
     ),

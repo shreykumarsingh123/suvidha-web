@@ -6,7 +6,7 @@ export const redisClient = createClient({
     url: config.redis.url,
 });
 
-redisClient.on('error', (error) => {
+redisClient.on('error', (error: Error) => {
     logger.error('Redis client error:', error);
 });
 
