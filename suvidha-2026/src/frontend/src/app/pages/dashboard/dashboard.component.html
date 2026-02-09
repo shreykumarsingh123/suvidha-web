@@ -1,34 +1,133 @@
-<app-header></app-header>
+<!-- MAIN DASHBOARD CONTENT -->
+<div class="flex-1 px-8 pt-24 pb-8 w-full max-w-[1400px] mx-auto flex flex-col justify-start animate-enter">
+    
+    <!-- ALERT SECTION (Fixed Marquee with Seamless Loop) -->
+    <div class="w-full mb-6 z-20">
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r shadow-sm flex items-center justify-between gap-4 overflow-hidden">
+            <div class="flex items-center gap-3 w-full overflow-hidden">
+                <i data-lucide="alert-triangle" class="w-6 h-6 flex-shrink-0 text-red-600"></i>
+                
+                <!-- Notice Label (Fixed) -->
+                <span class="font-black text-red-800 whitespace-nowrap z-10 bg-red-50 pr-2">NOTICE:</span>
+                
+                <!-- Scrolling Text Container (Mask) -->
+                <div class="relative w-full overflow-hidden">
+                    <!-- Seamless Marquee Content -->
+                    <div class="animate-marquee font-medium text-red-700">
+                        <!-- Text Block 1 -->
+                        <span class="mr-16">Municipal water supply maintenance scheduled for tomorrow (Zone 4) - Please store adequate water.  ||  ELECTRICITY ALERT: Planned power outage in Sector 7 from 2 PM to 4 PM for grid maintenance.  ||  CIVIC DUTY: Please keep your city clean and use dustbins.</span>
+                        <!-- Text Block 2 (Duplicate for Loop) -->
+                        <span class="mr-16">Municipal water supply maintenance scheduled for tomorrow (Zone 4) - Please store adequate water.  ||  ELECTRICITY ALERT: Planned power outage in Sector 7 from 2 PM to 4 PM for grid maintenance.  ||  CIVIC DUTY: Please keep your city clean and use dustbins.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="dashboard">
-  <h2>Welcome, Rajesh Kumar</h2>
-  <p class="location">Sector 24, Mumbai</p>
+    <!-- SERVICES GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+        
+        <!-- 1. ELECTRICITY -->
+        <div (click)="openService('elec')" class="kiosk-card card-yellow cursor-pointer min-h-[280px]">
+            <div class="p-8 flex-1 flex flex-col justify-start items-start text-white pb-14">
+                <div class="bg-white/20 p-4 rounded-xl mb-6 backdrop-blur-sm shadow-inner">
+                    <i data-lucide="zap" class="w-10 h-10 text-white"></i>
+                </div>
+                <h3 class="text-3xl font-black leading-tight tracking-tight drop-shadow-sm">Electricity<br>Services</h3>
+            </div>
+            <div class="card-strip absolute bottom-0 left-0">
+                <span>View Bill & Pay</span>
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </div>
+        </div>
 
-  <div class="stats">
-    <div class="stat orange">Pending Complaints<br><strong>03</strong></div>
-    <div class="stat green">Resolved Requests<br><strong>08</strong></div>
-    <div class="stat blue">Upcoming Bills<br><strong>₹1,250</strong></div>
-    <div class="stat purple">Recent Payments<br><strong>₹750</strong></div>
-  </div>
+        <!-- 2. WATER -->
+        <div (click)="openService('water')" class="kiosk-card card-blue cursor-pointer min-h-[280px]">
+            <div class="p-8 flex-1 flex flex-col justify-start items-start text-white pb-14">
+                <div class="bg-white/20 p-4 rounded-xl mb-6 backdrop-blur-sm shadow-inner">
+                    <i data-lucide="droplets" class="w-10 h-10 text-white"></i>
+                </div>
+                <h3 class="text-3xl font-black leading-tight tracking-tight drop-shadow-sm">Water &<br>Sanitation</h3>
+            </div>
+            <div class="card-strip absolute bottom-0 left-0">
+                <span>Connection Details</span>
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </div>
+        </div>
 
-  <h3>My Services</h3>
-  <div class="services">
-    <div class="service">My Complaints</div>
-    <div class="service">My Bills</div>
-    <div class="service">Uploaded Documents</div>
-    <div class="service">Download Receipts</div>
-  </div>
+        <!-- 3. GAS -->
+        <div (click)="openService('gas')" class="kiosk-card card-green cursor-pointer min-h-[280px]">
+            <div class="p-8 flex-1 flex flex-col justify-start items-start text-white pb-14">
+                <div class="bg-white/20 p-4 rounded-xl mb-6 backdrop-blur-sm shadow-inner">
+                    <i data-lucide="flame" class="w-10 h-10 text-white"></i>
+                </div>
+                <h3 class="text-3xl font-black leading-tight tracking-tight drop-shadow-sm">Gas<br>Services</h3>
+            </div>
+            <div class="card-strip absolute bottom-0 left-0">
+                <span>Book Cylinder</span>
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </div>
+        </div>
 
-  <h3>Quick Actions</h3>
-  <div class="quick">
-    <button class="blue">Track Request</button>
-    <button class="orange">Pay Last Bill</button>
-    <button class="gray">Download Receipt</button>
-  </div>
+        <!-- 4. MUNICIPAL -->
+        <div (click)="openService('muni')" class="kiosk-card card-red cursor-pointer min-h-[280px]">
+            <div class="p-8 flex-1 flex flex-col justify-start items-start text-white pb-14">
+                <div class="bg-white/20 p-4 rounded-xl mb-6 backdrop-blur-sm shadow-inner">
+                    <i data-lucide="megaphone" class="w-10 h-10 text-white"></i>
+                </div>
+                <h3 class="text-3xl font-black leading-tight tracking-tight drop-shadow-sm">Municipal<br>Complaints</h3>
+            </div>
+            <div class="card-strip absolute bottom-0 left-0">
+                <span>File Grievance</span>
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </div>
+        </div>
 
-  <div class="rating">
-    Was your issue resolved?
-    ⭐⭐⭐⭐⭐
-    <button>Submit Feedback</button>
-  </div>
+        <!-- 5. PAY BILLS -->
+        <div (click)="navigateToPayment()" class="kiosk-card card-light cursor-pointer min-h-[280px]">
+                <div class="p-8 flex-1 flex flex-col justify-start items-start pb-14">
+                <div class="bg-orange-100 p-4 rounded-xl mb-6 shadow-sm">
+                    <i data-lucide="file-text" class="w-10 h-10 text-orange-600"></i>
+                </div>
+                <h3 class="text-3xl font-black text-slate-800 mb-2 tracking-tight">Pay Bills</h3>
+                <p class="text-slate-500 font-bold text-sm">Clear all dues instantly</p>
+            </div>
+            <div class="action-strip bg-orange-50 border-t border-orange-100 text-orange-700 absolute bottom-0 left-0">
+                <span>Pay Last Bill</span>
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- 6. TRACK REQUEST -->
+        <div (click)="trackRequest()" class="kiosk-card card-light cursor-pointer min-h-[280px]">
+                <div class="p-8 flex-1 flex flex-col justify-start items-start pb-14">
+                <div class="bg-indigo-100 p-4 rounded-xl mb-6 shadow-sm">
+                    <i data-lucide="search" class="w-10 h-10 text-indigo-600"></i>
+                </div>
+                <h3 class="text-3xl font-black text-slate-800 mb-2 tracking-tight">Track Request</h3>
+                <p class="text-slate-500 font-bold text-sm">Check application status</p>
+            </div>
+                <div class="action-strip bg-indigo-50 border-t border-indigo-100 text-indigo-700 absolute bottom-0 left-0">
+                <span>Track Complaint</span>
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER STATUS BAR -->
+    <div class="bg-white rounded-xl p-4 shadow-md border border-slate-200 flex items-center justify-between z-20 relative mt-auto">
+        <button (click)="logout()" class="bg-red-50 hover:bg-red-100 text-red-700 px-6 py-3 rounded-lg font-bold flex items-center gap-3 transition-colors border border-red-100 cursor-pointer">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+            <span>Logout</span>
+        </button>
+
+        <!-- Status -->
+        <div class="flex items-center gap-2 text-slate-500 font-bold text-sm bg-slate-50 px-4 py-3 rounded-lg border border-slate-100">
+            <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+            <span class="hidden sm:inline">System Status: </span> READY
+        </div>
+    </div>
+
 </div>
+

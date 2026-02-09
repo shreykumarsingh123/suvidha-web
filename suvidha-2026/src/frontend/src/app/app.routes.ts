@@ -1,47 +1,36 @@
 import { Routes } from '@angular/router';
 import { WelcomeComponent } from './pages/welcome/welcome.component';
+import { LanguageComponent } from './pages/language/language.component';
+import { LoginComponent } from './pages/auth/login/login.component';
+import { OtpComponent } from './pages/auth/otp/otp.component';
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { ProviderSelectComponent } from './pages/services/provider-select/provider-select.component';
+import { ConsumerInputComponent } from './pages/services/consumer-input/consumer-input.component';
+import { ServiceDetailComponent } from './pages/services/service-detail/service-detail.component';
+import { PaymentComponent } from './pages/payment/payment.component';
+import { ReceiptComponent } from './pages/receipt/receipt.component';
 import { authGuard } from './core/guards/auth.guard';
-import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'welcome', pathMatch: 'full' },
 
   // Public Routes (No Header/Layout)
   { path: 'welcome', component: WelcomeComponent },
-  { path: 'language', loadComponent: () => import('./pages/language/language.component').then(m => m.LanguageComponent) },
-  { path: 'login', loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent) },
-  { path: 'otp', loadComponent: () => import('./pages/auth/otp/otp.component').then(m => m.OtpComponent) },
+  { path: 'language', component: LanguageComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'otp', component: OtpComponent },
 
-  // Protected Routes (With Header/Layout)
-  {
-    path: '',
-    component: MainLayoutComponent,
+  // Protected Routes (Dashboard with integrated header)
+  { 
+    path: '', 
     canActivate: [authGuard],
     children: [
-      {
-        path: 'dashboard',
-        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
-      },
-      {
-        path: 'provider-select',
-        loadComponent: () => import('./pages/services/provider-select/provider-select.component').then(m => m.ProviderSelectComponent)
-      },
-      {
-        path: 'consumer-input',
-        loadComponent: () => import('./pages/services/consumer-input/consumer-input.component').then(m => m.ConsumerInputComponent)
-      },
-      {
-        path: 'service/:id',
-        loadComponent: () => import('./pages/services/service-detail/service-detail.component').then(m => m.ServiceDetailComponent)
-      },
-      {
-        path: 'payment',
-        loadComponent: () => import('./pages/payment/payment.component').then(m => m.PaymentComponent)
-      },
-      {
-        path: 'receipt',
-        loadComponent: () => import('./pages/receipt/receipt.component').then(m => m.ReceiptComponent)
-      }
+      { path: 'dashboard', component: DashboardComponent },
+      { path: 'provider-select', component: ProviderSelectComponent },
+      { path: 'consumer-input', component: ConsumerInputComponent },
+      { path: 'service/:id', component: ServiceDetailComponent },
+      { path: 'payment', component: PaymentComponent },
+      { path: 'receipt', component: ReceiptComponent }
     ]
   },
 
@@ -49,3 +38,4 @@ export const routes: Routes = [
   { path: 'admin', redirectTo: 'welcome' },
   { path: '**', redirectTo: 'welcome' }
 ];
+

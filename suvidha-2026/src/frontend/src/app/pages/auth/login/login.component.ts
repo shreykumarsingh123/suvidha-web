@@ -3,10 +3,6 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 
-// ... lines 5-96 ...
-error: (err: unknown) => console.error(err)
-
-
 @Component({
     selector: 'app-login',
     standalone: true,
@@ -20,8 +16,7 @@ error: (err: unknown) => console.error(err)
                 <div class="absolute inset-0 opacity-10"></div>
                 <div class="relative z-10">
                     <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md mb-8 border border-white/10">
-                         <!-- Shield Icon -->
-                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
                     </div>
                     <h2 class="text-4xl font-bold mb-4 leading-tight">Secure Citizen<br>Authentication</h2>
                     <p class="text-slate-400 text-lg">Access electricity, water, gas, and municipal services securely.</p>
@@ -55,7 +50,7 @@ error: (err: unknown) => console.error(err)
                         <button class="btn-tactile h-20 bg-amber-50 text-amber-700 font-bold rounded-xl border-b-[6px] border-amber-200 shadow-sm flex items-center justify-center text-lg active:border-b-0 active:translate-y-2 transition-all cursor-pointer" (click)="clearKey()">CLR</button>
                         <button (click)="addKey('0')" class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer">0</button>
                         <button class="btn-tactile h-20 bg-red-50 text-red-600 font-bold rounded-xl border-b-[6px] border-red-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" (click)="delKey()">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                         </button>
                     </div>
 
@@ -63,7 +58,7 @@ error: (err: unknown) => console.error(err)
                         <span>VERIFY & PROCEED</span> 
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
-                    <p class="text-center text-xs text-slate-400 mt-4">Simulated Keypad</p>
+                    <p class="text-center text-xs text-slate-400 mt-4">PC Users: Use keyboard numbers to type</p>
                 </div>
             </div>
         </div>
@@ -95,6 +90,8 @@ export class LoginComponent {
 
     proceed() {
         if (this.mobileNumber().length === 10) {
+            // Store temporarily for OTP verification
+            sessionStorage.setItem('mobile', this.mobileNumber());
             this.authService.requestOtp(this.mobileNumber()).subscribe({
                 next: () => {
                     this.router.navigate(['/otp'], { queryParams: { mobile: this.mobileNumber() } });
@@ -104,3 +101,4 @@ export class LoginComponent {
         }
     }
 }
+

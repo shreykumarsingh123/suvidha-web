@@ -48,7 +48,7 @@ import { AuthService } from '../../../core/services/auth.service';
                         <button class="btn-tactile h-20 bg-amber-50 text-amber-700 font-bold rounded-xl border-b-[6px] border-amber-200 shadow-sm flex items-center justify-center text-lg active:border-b-0 active:translate-y-2 transition-all cursor-pointer" (click)="clearKey()">CLR</button>
                         <button (click)="addKey('0')" class="btn-tactile h-20 bg-white text-slate-700 text-3xl font-bold rounded-xl border-b-[6px] border-slate-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer">0</button>
                         <button class="btn-tactile h-20 bg-red-50 text-red-600 font-bold rounded-xl border-b-[6px] border-red-200 shadow-sm flex items-center justify-center active:border-b-0 active:translate-y-2 transition-all cursor-pointer" (click)="delKey()">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 24 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                         </button>
                     </div>
 
@@ -56,6 +56,9 @@ import { AuthService } from '../../../core/services/auth.service';
                         <button (click)="verify()" [disabled]="otp().length !== 4" [ngClass]="{'opacity-70 pointer-events-none': otp().length !== 4, 'bg-blue-600 border-blue-800 text-white': otp().length === 4, 'bg-slate-300 border-slate-400': otp().length !== 4}" class="w-full py-5 text-xl font-bold rounded-xl shadow-lg border-b-[6px] transition-all flex items-center justify-center gap-3 transform cursor-pointer">
                             <span>CONFIRM OTP</span> 
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </button>
+                        <button class="w-full text-slate-500 font-bold text-sm hover:text-blue-600 transition-colors cursor-pointer" (click)="resendOtp()">
+                            Resend OTP (30s)
                         </button>
                     </div>
                 </div>
@@ -73,7 +76,7 @@ export class OtpComponent implements OnInit {
 
     ngOnInit() {
         this.route.queryParams.subscribe(params => {
-            this.mobileNumber = params['mobile'];
+            this.mobileNumber = params['mobile'] || sessionStorage.getItem('mobile') || '';
             if (!this.mobileNumber) {
                 this.router.navigate(['/login']);
             }
@@ -101,11 +104,20 @@ export class OtpComponent implements OnInit {
     verify() {
         if (this.otp().length === 4) {
             this.authService.verifyOtp(this.mobileNumber, this.otp()).subscribe({
-                error: (err) => {
+                next: () => {
+                    sessionStorage.removeItem('mobile');
+                    this.router.navigate(['/dashboard']);
+                },
+                error: (err: any) => {
                     console.error(err);
-                    alert('Invalid OTP'); // Simple feedback for now
+                    alert('Invalid OTP - Demo: use any 4 digits');
                 }
             });
         }
     }
+
+    resendOtp() {
+        alert('OTP resent! (Demo mode)');
+    }
 }
+
