@@ -88,7 +88,31 @@ The project is organized into two main parts: the backend and the frontend.
 The backend is built using Node.js and TypeScript, providing a RESTful API for the frontend to interact with. It includes:
 - **Express.js** for handling HTTP requests.
 - **TypeScript** for type safety and better development experience.
-- **MongoDB** for data storage (or any other database as per configuration).
+- **PostgreSQL** for data storage with connection pooling.
+- **JWT Authentication** for secure user sessions.
+- **OTP Verification** via Twilio SMS integration.
+- **Rate Limiting** to prevent abuse.
+- **Data Encryption** for sensitive information.
+
+##### API Endpoints
+
+**Authentication**
+- `POST /api/auth/request-otp` - Request OTP for mobile number
+  - Body: `{ "mobileNumber": "+1234567890" }`
+- `POST /api/auth/verify-otp` - Verify OTP and get JWT token
+  - Body: `{ "mobileNumber": "+1234567890", "otp": "1234" }`
+- `POST /api/auth/resend-otp` - Resend OTP to mobile number
+  - Body: `{ "mobileNumber": "+1234567890" }`
+
+**Tickets** (All require JWT authentication via `Authorization: Bearer <token>` header)
+- `GET /api/tickets` - Get all tickets
+- `GET /api/tickets/:id` - Get specific ticket by ID
+- `GET /api/tickets/user/:userId` - Get all tickets for a specific user
+- `POST /api/tickets` - Create new ticket
+  - Body: `{ "title": "...", "description": "...", "category": "billing|technical|general|complaint|request", "priority": "low|medium|high|urgent" }`
+- `PUT /api/tickets/:id` - Update ticket
+  - Body: `{ "title": "...", "description": "...", "status": "open|in-progress|resolved|closed", "priority": "...", "category": "..." }`
+- `DELETE /api/tickets/:id` - Delete ticket
 
 #### Frontend
 The frontend is developed using Angular, offering a responsive and user-friendly interface. Key components include:
@@ -99,20 +123,18 @@ The frontend is developed using Angular, offering a responsive and user-friendly
 #### Prerequisites
 - Node.js (v14 or later recommended)
 - Angular CLI (for frontend development)
-- MongoDB (or any other database as per your choice)
+- PostgreSQL (v12 or later)
 
 #### Setup Instructions
 1. Clone the repository (if not already):
 	```bash
-	git clone https://github.com/yourusername/suvidha-web.git
+	git clone https://github.com/shreykumarsingh123/suvidha-web.git
 	cd suvidha-web/suvidha-2026
 	```
 
-2. Install root (project) dependencies if present:
-	```powershell
-	cd "C:\Users\shrey\OneDrive\Desktop\suvidha app\suvidha-web\suvidha-2026"
-	npm install
-	```
+2. **Set up PostgreSQL Database:**
+	- Create a new database named `suvidha`
+	- Update connection string in `.env` file
 
 3. Install backend dependencies:
 	```powershell
@@ -120,19 +142,30 @@ The frontend is developed using Angular, offering a responsive and user-friendly
 	npm install
 	```
 
-4. Install frontend dependencies:
+4. **Configure backend environment:**
+	```powershell
+	cd src/backend
+	cp .env.example .env
+	# Edit .env file with your PostgreSQL credentials and other settings
+	```
+
+5. Install frontend dependencies:
 	```powershell
 	cd src/frontend
 	npm install
 	```
 
-5. Configure environment variables for the backend (e.g., `.env` with DB connection string).
-
-6. Start the backend server (build then run):
+6. Start the backend server (development mode):
+	```powershell
+	cd src/backend
+	npm run dev
+	```
+	
+	Or build and run production:
 	```powershell
 	cd src/backend
 	npm run build
-	node dist/app.js
+	npm start
 	```
 
 7. Start the frontend application (Angular dev server):
