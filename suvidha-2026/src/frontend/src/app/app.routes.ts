@@ -26,6 +26,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent },
+      { path: 'admin', component: DashboardComponent },
       { path: 'provider-select', component: ProviderSelectComponent },
       { path: 'consumer-input', component: ConsumerInputComponent },
       { path: 'service/:id', component: ServiceDetailComponent },
@@ -35,7 +36,5 @@ export const routes: Routes = [
   },
 
   // Fallback
-  { path: 'admin', redirectTo: 'welcome' },
   { path: '**', redirectTo: 'welcome' }
 ];
-

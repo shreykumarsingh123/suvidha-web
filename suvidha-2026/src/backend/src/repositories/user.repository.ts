@@ -1,11 +1,4 @@
 import { query } from '../db/postgres';
-import { config } from '../config';
-import {
-    deleteCachedValue,
-    getCacheKey,
-    getCachedValue,
-    setCachedValue,
-} from '../cache/redis';
 
 export interface UserRecord {
     id: number;
@@ -32,34 +25,9 @@ const mapRowToUser = (row: {
     createdAt: new Date(row.created_at),
 });
 
-const parseCachedUser = (value: string): UserRecord => {
-    const parsed = JSON.parse(value) as UserRecord;
-    return {
-        ...parsed,
-        otpExpires: parsed.otpExpires ? new Date(parsed.otpExpires) : null,
-        lastLogin: parsed.lastLogin ? new Date(parsed.lastLogin) : null,
-        createdAt: new Date(parsed.createdAt),
-    };
-};
-
-const cacheUser = async (user: UserRecord | null): Promise<void> => {
-    if (!user) {
-        return;
-    }
-
-    const key = getCacheKey(user.mobileNumber);
-    await setCachedValue(key, JSON.stringify(user), config.redis.ttlSeconds);
-};
-
 export const findUserByMobileNumber = async (
     mobileNumber: string
 ): Promise<UserRecord | null> => {
-    const cacheKey = getCacheKey(mobileNumber);
-    const cached = await getCachedValue(cacheKey);
-    if (cached) {
-        return parseCachedUser(cached);
-    }
-
     const result = await query<{
         id: number;
         mobile_number: string;
@@ -77,7 +45,6 @@ export const findUserByMobileNumber = async (
     }
 
     const user = mapRowToUser(result.rows[0]);
-    await cacheUser(user);
     return user;
 };
 
@@ -104,7 +71,6 @@ export const upsertUserOtp = async (
     );
 
     const user = mapRowToUser(result.rows[0]);
-    await cacheUser(user);
     return user;
 };
 
@@ -131,10 +97,5 @@ export const clearUserOtp = async (mobileNumber: string): Promise<UserRecord | n
     }
 
     const user = mapRowToUser(result.rows[0]);
-    await cacheUser(user);
     return user;
-};
-
-export const invalidateUserCache = async (mobileNumber: string): Promise<void> => {
-    await deleteCachedValue(getCacheKey(mobileNumber));
 };

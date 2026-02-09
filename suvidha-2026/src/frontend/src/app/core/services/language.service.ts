@@ -36,7 +36,7 @@ export class LanguageService {
                 WELCOME: 'Namaste, Arjun',
                 LAST_LOGIN: 'Last Login: Today, 10:45 AM',
                 TOTAL_DUE: 'Total Outstanding',
-                PAY_BILLS: 'Pay Bills',
+                PAY_BILLS: 'Transaction History',
                 TRACK: 'Track Request',
                 LOGOUT: 'Secure Logout'
             },
@@ -79,7 +79,7 @@ export class LanguageService {
                 WELCOME: 'नमस्ते, अर्जुन',
                 LAST_LOGIN: 'पिछला लॉगिन: आज, 10:45 AM',
                 TOTAL_DUE: 'कुल बकाया राशि',
-                PAY_BILLS: 'बिल भुगतान',
+                PAY_BILLS: 'लेन-देन इतिहास',
                 TRACK: 'अनुरोध ट्रैक करें',
                 LOGOUT: 'सुरक्षित लॉगआउट'
             },
@@ -125,4 +125,3 @@ export class LanguageService {
         return result || key;
     }
 }
-

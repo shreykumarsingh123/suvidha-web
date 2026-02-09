@@ -16,10 +16,6 @@ export const config = {
         idleTimeoutMs: toNumber(process.env.POSTGRES_IDLE_TIMEOUT_MS, 30000),
         connectionTimeoutMs: toNumber(process.env.POSTGRES_CONNECTION_TIMEOUT_MS, 2000),
     },
-    redis: {
-        url: process.env.REDIS_URL || 'redis://localhost:6379',
-        ttlSeconds: toNumber(process.env.REDIS_TTL_SECONDS, 300),
-    },
     server: {
         port: process.env.PORT || 3000,
     },
