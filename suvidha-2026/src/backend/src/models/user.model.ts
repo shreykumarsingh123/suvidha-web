@@ -1,20 +1,8 @@
-import mongoose, { Schema, Document } from 'mongoose';
-
-
-export interface IUser extends Document {
-  mobileNumber: string;
-  otp: string;
-  otpExpires: Date;
-  lastLogin: Date;
-  createdAt: Date;
+export interface User {
+    id: number;
+    mobileNumber: string;
+    otpEncrypted?: string | null;
+    otpExpires?: Date | null;
+    lastLogin?: Date | null;
+    createdAt?: Date;
 }
-
-const UserSchema: Schema = new Schema({
-  mobileNumber: { type: String, required: true, unique: true },
-  otp: { type: String },
-  otpExpires: { type: Date },
-  lastLogin: { type: Date, default: Date.now },
-  createdAt: { type: Date, default: Date.now },
-});
-
-export default mongoose.model<IUser>('User', UserSchema);

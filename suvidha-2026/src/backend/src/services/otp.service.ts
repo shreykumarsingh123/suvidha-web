@@ -1,6 +1,13 @@
-import User from '../models/user.model';
-import { sendOtp as sendOtpViatwilio } from '../utils/twilio';
+import crypto from 'crypto';
 import logger from '../utils/logger';
+import { sendOtp as sendOtpViaTwilio } from '../utils/twilio';
+import { decryptValue, encryptValue } from '../utils/encryption';
+import {
+    clearUserOtp,
+    findUserByMobileNumber,
+    upsertUserOtp,
+    UserRecord,
+} from '../repositories/user.repository';
 
 /**
  * Generate a random 4-digit OTP
@@ -9,10 +16,27 @@ const generateOTP = (): string => {
     return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
+const isOtpMatch = (storedOtp: string, providedOtp: string): boolean => {
+    const storedBuffer = Buffer.from(storedOtp, 'utf8');
+    const providedBuffer = Buffer.from(providedOtp, 'utf8');
+
+    if (storedBuffer.length !== providedBuffer.length) {
+        return false;
+    }
+
+    return crypto.timingSafeEqual(storedBuffer, providedBuffer);
+};
+
+const buildUserResponse = (user: UserRecord) => ({
+    id: user.id,
+    mobileNumber: user.mobileNumber,
+    lastLogin: user.lastLogin,
+});
+
 /**
  * Request OTP for a given mobile number
  * Generates OTP, saves to database, and sends via SMS
- * 
+ *
  * @param mobileNumber - The mobile number to send OTP to
  * @returns Promise<{success: boolean, message: string, otp?: string}>
  */
@@ -31,18 +55,11 @@ export const requestOtpService = async (mobileNumber: string): Promise<{
 
         const otp = generateOTP();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const encryptedOtp = encryptValue(otp);
 
-        let user = await User.findOne({ mobileNumber });
-        if (!user) {
-            user = new User({ mobileNumber });
-        }
+        await upsertUserOtp(mobileNumber, encryptedOtp, otpExpires);
 
-        user.otp = otp;
-        user.otpExpires = otpExpires;
-        await user.save();
-
-        // Send OTP via SMS using Twilio
-        const smsSent = await sendOtpViatwilio(mobileNumber, otp);
+        const smsSent = await sendOtpViaTwilio(mobileNumber, otp);
 
         if (!smsSent) {
             logger.warn(
@@ -73,7 +90,7 @@ export const requestOtpService = async (mobileNumber: string): Promise<{
 /**
  * Verify OTP for a given mobile number
  * Validates OTP and expiration time
- * 
+ *
  * @param mobileNumber - The mobile number
  * @param otp - The OTP to verify
  * @returns Promise<{success: boolean, message: string, user?: any}>
@@ -94,7 +111,7 @@ export const verifyOtpService = async (
             };
         }
 
-        const user = await User.findOne({ mobileNumber });
+        const user = await findUserByMobileNumber(mobileNumber);
         if (!user) {
             return {
                 success: false,
@@ -102,7 +119,16 @@ export const verifyOtpService = async (
             };
         }
 
-        if (user.otp !== otp) {
+        if (!user.otpEncrypted) {
+            return {
+                success: false,
+                message: 'No OTP found. Please request a new OTP.',
+            };
+        }
+
+        const storedOtp = decryptValue(user.otpEncrypted);
+
+        if (!isOtpMatch(storedOtp, otp)) {
             logger.warn(`Invalid OTP attempt for ${mobileNumber}`);
             return {
                 success: false,
@@ -118,21 +144,19 @@ export const verifyOtpService = async (
             };
         }
 
-        // Clear OTP
-        user.otp = undefined as any;
-        user.otpExpires = undefined as any;
-        user.lastLogin = new Date();
-        await user.save();
+        const updatedUser = await clearUserOtp(mobileNumber);
+        if (!updatedUser) {
+            return {
+                success: false,
+                message: 'User not found',
+            };
+        }
 
         logger.info(`OTP verified successfully for ${mobileNumber}`);
         return {
             success: true,
             message: 'OTP verified successfully',
-            user: {
-                id: user._id,
-                mobileNumber: user.mobileNumber,
-                lastLogin: user.lastLogin,
-            },
+            user: buildUserResponse(updatedUser),
         };
     } catch (error) {
         logger.error('Error in verifyOtpService:', error);
@@ -146,7 +170,7 @@ export const verifyOtpService = async (
 /**
  * Resend OTP for a given mobile number
  * Useful when user clicks "Resend OTP"
- * 
+ *
  * @param mobileNumber - The mobile number
  * @returns Promise<{success: boolean, message: string}>
  */
@@ -155,7 +179,7 @@ export const resendOtpService = async (mobileNumber: string): Promise<{
     message: string;
 }> => {
     try {
-        const user = await User.findOne({ mobileNumber });
+        const user = await findUserByMobileNumber(mobileNumber);
         if (!user) {
             return {
                 success: false,
@@ -163,15 +187,15 @@ export const resendOtpService = async (mobileNumber: string): Promise<{
             };
         }
 
-        if (!user.otp) {
+        if (!user.otpEncrypted) {
             return {
                 success: false,
                 message: 'No pending OTP found. Please request a new OTP.',
             };
         }
 
-        // Send existing OTP again
-        const smsSent = await sendOtpViatwilio(mobileNumber, user.otp);
+        const otp = decryptValue(user.otpEncrypted);
+        const smsSent = await sendOtpViaTwilio(mobileNumber, otp);
 
         if (!smsSent) {
             logger.warn(`Failed to resend OTP to ${mobileNumber}`);

@@ -9,9 +9,17 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=mongodb://mongo:27017/suvidha
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/suvidha
+      - POSTGRES_SSL=false
+      - REDIS_URL=redis://redis:6379
+      - DATA_ENCRYPTION_KEY=${DATA_ENCRYPTION_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
     depends_on:
-      - mongo
+      - postgres
+      - redis
 
   frontend:
     build:
@@ -22,12 +30,21 @@ services:
     depends_on:
       - backend
 
-  mongo:
-    image: mongo:latest
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=suvidha
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongo_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
 volumes:
-  mongo_data:
+  postgres_data:

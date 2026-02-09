@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger';
-import User from '../models/user.model';
 import {
     requestOtpService,
     verifyOtpService,
@@ -32,25 +31,9 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const user = await User.findOne({ mobileNumber });
-        if (!user) {
-            res.status(400).json({ message: 'User not found' });
-            return;
-        }
-
-        if (user.otp !== otp) {
-            res.status(400).json({ message: 'Invalid OTP' });
-            return;
-        }
-
-        if (user.otpExpires < new Date()) {
-            res.status(400).json({ message: 'OTP expired' });
-            return;
-        }
-
         const result = await verifyOtpService(mobileNumber, otp);
 
-        if (!result.success) {
+        if (!result.success || !result.user) {
             res.status(400).json({ message: result.message });
             return;
         }
