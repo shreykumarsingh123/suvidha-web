@@ -9,6 +9,10 @@ export interface TicketRecord {
     priority: string;
     status: string;
     user_id: number;
+    complaint_type?: string;
+    location?: string;
+    assigned_officer_id?: number;
+    notification_sent?: boolean;
     created_at: Date;
     updated_at: Date;
 }
@@ -21,14 +25,18 @@ const mapRecordToTicket = (record: TicketRecord): Ticket => ({
     priority: record.priority as any,
     status: record.status as any,
     userId: record.user_id,
+    complaintType: record.complaint_type as any,
+    location: record.location,
+    assignedOfficerId: record.assigned_officer_id,
+    notificationSent: record.notification_sent,
     createdAt: record.created_at,
     updatedAt: record.updated_at,
 });
 
 export const createTicket = async (ticketData: CreateTicketDto): Promise<Ticket> => {
     const result = await query<TicketRecord>(
-        `INSERT INTO tickets (title, description, category, priority, status, user_id)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO tickets (title, description, category, priority, status, user_id, complaint_type, location)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
         [
             ticketData.title,
@@ -37,6 +45,8 @@ export const createTicket = async (ticketData: CreateTicketDto): Promise<Ticket>
             ticketData.priority,
             TicketStatus.OPEN,
             ticketData.userId,
+            ticketData.complaintType || null,
+            ticketData.location || null,
         ]
     );
 
@@ -105,6 +115,22 @@ export const updateTicket = async (
     if (updateData.status !== undefined) {
         fields.push(`status = $${paramIndex++}`);
         values.push(updateData.status);
+    }
+    if (updateData.complaintType !== undefined) {
+        fields.push(`complaint_type = $${paramIndex++}`);
+        values.push(updateData.complaintType);
+    }
+    if (updateData.location !== undefined) {
+        fields.push(`location = $${paramIndex++}`);
+        values.push(updateData.location);
+    }
+    if (updateData.assignedOfficerId !== undefined) {
+        fields.push(`assigned_officer_id = $${paramIndex++}`);
+        values.push(updateData.assignedOfficerId);
+    }
+    if (updateData.notificationSent !== undefined) {
+        fields.push(`notification_sent = $${paramIndex++}`);
+        values.push(updateData.notificationSent);
     }
 
     if (fields.length === 0) {

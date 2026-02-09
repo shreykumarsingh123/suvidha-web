@@ -33,12 +33,13 @@ import { AuthService } from '../../../core/services/auth.service';
                 <div class="w-full max-w-md">
                     <div class="text-center mb-8">
                         <h2 class="text-3xl font-bold text-slate-900 mb-2">Enter OTP</h2>
-                        <p class="text-slate-500">Sent to +91 {{mobileNumber}}</p>
+                        <p class="text-slate-500">Sent to {{mobileNumber}}</p>
+                        <p *ngIf="lastOtpReceived()" class="text-green-600 font-bold mt-2 text-lg">Your OTP: {{lastOtpReceived()}}</p>
                     </div>
 
                     <!-- OTP Input -->
                     <div class="flex justify-center mb-8 gap-4">
-                        <input type="text" readonly [value]="otp()" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl text-5xl font-mono py-4 text-center text-slate-800 tracking-[0.5em] focus:border-blue-500 outline-none cursor-text" placeholder="____">
+                        <input type="text" readonly [value]="otp()" class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl text-5xl font-mono py-4 text-center text-slate-800 tracking-[0.5em] focus:border-blue-500 outline-none cursor-text" placeholder="______">
                     </div>
 
                     <!-- Keypad -->
@@ -53,12 +54,16 @@ import { AuthService } from '../../../core/services/auth.service';
                     </div>
 
                     <div class="space-y-4">
-                        <button (click)="verify()" [disabled]="otp().length !== 4" [ngClass]="{'opacity-70 pointer-events-none': otp().length !== 4, 'bg-blue-600 border-blue-800 text-white': otp().length === 4, 'bg-slate-300 border-slate-400': otp().length !== 4}" class="w-full py-5 text-xl font-bold rounded-xl shadow-lg border-b-[6px] transition-all flex items-center justify-center gap-3 transform cursor-pointer">
+                        <button (click)="verify()" [disabled]="otp().length !== 6" [ngClass]="{'opacity-70 pointer-events-none': otp().length !== 6, 'bg-blue-600 border-blue-800 text-white': otp().length === 6, 'bg-slate-300 border-slate-400': otp().length !== 6}" class="w-full py-5 text-xl font-bold rounded-xl shadow-lg border-b-[6px] transition-all flex items-center justify-center gap-3 transform cursor-pointer">
                             <span>CONFIRM OTP</span> 
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         </button>
-                        <button class="w-full text-slate-500 font-bold text-sm hover:text-blue-600 transition-colors cursor-pointer" (click)="resendOtp()">
-                            Resend OTP (30s)
+                        <button 
+                            [disabled]="!canResend()" 
+                            [ngClass]="{'opacity-50 cursor-not-allowed': !canResend(), 'hover:text-blue-600': canResend()}" 
+                            class="w-full text-slate-500 font-bold text-sm transition-colors cursor-pointer" 
+                            (click)="resendOtp()">
+                            {{ canResend() ? 'Resend OTP' : 'Resend OTP (' + resendTimer() + 's)' }}
                         </button>
                     </div>
                 </div>
@@ -73,18 +78,37 @@ export class OtpComponent implements OnInit {
     authService = inject(AuthService);
     router = inject(Router);
     route = inject(ActivatedRoute);
+    resendTimer = signal(30);
+    canResend = signal(false);
+    lastOtpReceived = signal('');
 
     ngOnInit() {
         this.route.queryParams.subscribe(params => {
             this.mobileNumber = params['mobile'] || sessionStorage.getItem('mobile') || '';
             if (!this.mobileNumber) {
                 this.router.navigate(['/login']);
+            } else {
+                this.startResendTimer();
             }
         });
     }
 
+    private startResendTimer() {
+        this.canResend.set(false);
+        this.resendTimer.set(30);
+        const interval = setInterval(() => {
+            const current = this.resendTimer();
+            if (current <= 1) {
+                clearInterval(interval);
+                this.canResend.set(true);
+            } else {
+                this.resendTimer.set(current - 1);
+            }
+        }, 1000);
+    }
+
     addKey(key: string) {
-        if (this.otp().length < 4) {
+        if (this.otp().length < 6) {
             this.otp.update(v => v + key);
         }
     }
@@ -102,7 +126,7 @@ export class OtpComponent implements OnInit {
     }
 
     verify() {
-        if (this.otp().length === 4) {
+        if (this.otp().length === 6) {
             this.authService.verifyOtp(this.mobileNumber, this.otp()).subscribe({
                 next: () => {
                     sessionStorage.removeItem('mobile');
@@ -110,14 +134,37 @@ export class OtpComponent implements OnInit {
                 },
                 error: (err: any) => {
                     console.error(err);
-                    alert('Invalid OTP - Demo: use any 4 digits');
+                    alert('Invalid OTP. Please try again.');
+                    this.clearKey();
                 }
             });
         }
     }
 
     resendOtp() {
-        alert('OTP resent! (Demo mode)');
+        if (!this.canResend()) return;
+
+        this.authService.requestOtp(this.mobileNumber).subscribe({
+            next: (response: any) => {
+                if (response.success) {
+                    // In development mode, the OTP is returned in the response
+                    if (response.otp) {
+                        this.lastOtpReceived.set(response.otp);
+                        alert(`OTP Resent!\n\nYour OTP: ${response.otp}\n\n(OTP is shown because you're in development mode)`);
+                        console.log('🔐 Development OTP:', response.otp);
+                    } else {
+                        alert('OTP has been resent to your mobile number.');
+                    }
+                    this.startResendTimer();
+                } else {
+                    alert('Failed to resend OTP. Please try again.');
+                }
+            },
+            error: (err) => {
+                console.error('Resend OTP error:', err);
+                alert('Failed to resend OTP. Please try again.');
+            }
+        });
     }
 }
 

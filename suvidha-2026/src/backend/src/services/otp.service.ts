@@ -10,10 +10,10 @@ import {
 } from '../repositories/user.repository';
 
 /**
- * Generate a random 4-digit OTP
+ * Generate a random 6-digit OTP
  */
 const generateOTP = (): string => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
+    return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 const isOtpMatch = (storedOtp: string, providedOtp: string): boolean => {
@@ -108,6 +108,31 @@ export const verifyOtpService = async (
             return {
                 success: false,
                 message: 'Mobile number and OTP are required',
+            };
+        }
+
+        // DEMO MODE: Accept any 6-digit OTP in development
+        if (process.env.NODE_ENV === 'development' && /^\d{6}$/.test(otp)) {
+            logger.info(`✅ Demo mode: Accepting any 6-digit OTP for ${mobileNumber}`);
+
+            // Find or create user
+            let user = await findUserByMobileNumber(mobileNumber);
+
+            if (!user) {
+                // Create new user in demo mode
+                await upsertUserOtp(mobileNumber, '', new Date(0));
+                user = await findUserByMobileNumber(mobileNumber);
+            }
+
+            // Clear OTP after successful verification
+            if (user) {
+                await clearUserOtp(mobileNumber);
+            }
+
+            return {
+                success: true,
+                message: 'OTP verified successfully (Demo Mode - any 6 digits accepted)',
+                user: user ? buildUserResponse(user) : undefined,
             };
         }
 

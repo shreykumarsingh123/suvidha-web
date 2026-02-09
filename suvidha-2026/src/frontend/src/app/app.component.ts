@@ -15,11 +15,11 @@ declare const lucide: any;
 })
 export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   title = 'Smart Urban Virtual Interactive Digital Helpdesk Assistant (SUVIDHA) - 2026';
-  
+
   authService = inject(AuthService);
   idleService = inject(IdleService);
   router = inject(Router);
-  
+
   currentTime: string = '00:00';
   private clockInterval: any;
   private iconInitialized: boolean = false;
@@ -34,10 +34,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initializeIcons();
-    this.updateClock();
-    this.clockInterval = setInterval(() => {
+    // Defer clock initialization to avoid ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => {
       this.updateClock();
-    }, 1000);
+      this.clockInterval = setInterval(() => {
+        this.updateClock();
+      }, 1000);
+    }, 0);
   }
 
   ngOnDestroy(): void {

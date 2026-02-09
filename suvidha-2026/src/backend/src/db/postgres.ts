@@ -9,8 +9,8 @@ const pool = new Pool({
     connectionTimeoutMillis: config.postgres.connectionTimeoutMs,
     ssl: config.postgres.sslEnabled
         ? {
-              rejectUnauthorized: config.postgres.sslRejectUnauthorized,
-          }
+            rejectUnauthorized: config.postgres.sslRejectUnauthorized,
+        }
         : undefined,
 });
 
@@ -25,5 +25,5 @@ export const connectPostgres = async (): Promise<void> => {
 };
 
 export const query = <T>(text: string, params?: Array<unknown>) => {
-    return pool.query(text, params) as unknown as { rows: T[] };
+    return pool.query(text, params) as unknown as { rows: T[]; rowCount: number | null };
 };

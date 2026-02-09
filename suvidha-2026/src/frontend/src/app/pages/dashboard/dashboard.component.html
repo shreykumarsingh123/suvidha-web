@@ -122,11 +122,21 @@
             <span>Logout</span>
         </button>
 
+        <!-- Auto-Logout Timer -->
+        <div 
+            class="flex items-center gap-2 font-bold text-sm px-4 py-3 rounded-lg border transition-all"
+            [ngClass]="showWarning ? 'bg-red-50 text-red-700 border-red-200 animate-pulse' : 'bg-blue-50 text-blue-700 border-blue-200'">
+            <i [attr.data-lucide]="showWarning ? 'alert-circle' : 'clock'" class="w-5 h-5"></i>
+            <span class="hidden sm:inline">{{ showWarning ? 'Auto-logout in:' : 'Session:' }} </span>
+            <span class="font-mono">{{ formatTime(remainingTime) }}</span>
+        </div>
+
         <!-- Status -->
         <div class="flex items-center gap-2 text-slate-500 font-bold text-sm bg-slate-50 px-4 py-3 rounded-lg border border-slate-100">
             <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
             <span class="hidden sm:inline">System Status: </span> READY
         </div>
     </div>
+
 
 </div>

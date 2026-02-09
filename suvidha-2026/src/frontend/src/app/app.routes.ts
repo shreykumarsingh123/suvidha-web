@@ -21,8 +21,8 @@ export const routes: Routes = [
   { path: 'otp', component: OtpComponent },
 
   // Protected Routes (Dashboard with integrated header)
-  { 
-    path: '', 
+  {
+    path: '',
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent },
@@ -31,7 +31,9 @@ export const routes: Routes = [
       { path: 'consumer-input', component: ConsumerInputComponent },
       { path: 'service/:id', component: ServiceDetailComponent },
       { path: 'payment', component: PaymentComponent },
-      { path: 'receipt', component: ReceiptComponent }
+      { path: 'receipt', component: ReceiptComponent },
+      { path: 'bills', loadComponent: () => import('./components/bills-list/bills-list.component').then(m => m.BillsListComponent) },
+      { path: 'complaints', loadComponent: () => import('./components/complaint-form/complaint-form.component').then(m => m.ComplaintFormComponent) }
     ]
   },
 

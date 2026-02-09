@@ -7,7 +7,9 @@ import {
     updateTicket as updateTicketRepo,
     deleteTicket as deleteTicketRepo,
 } from '../repositories/ticket.repository';
-import { CreateTicketDto, UpdateTicketDto, Ticket } from '../models/ticket.model';
+import { CreateTicketDto, UpdateTicketDto, Ticket, TicketCategory } from '../models/ticket.model';
+import { officerRepository } from '../repositories/officer.repository';
+import { createNotificationService } from './notification.service';
 
 interface ServiceResponse<T> {
     success: boolean;
@@ -60,6 +62,28 @@ export const createTicketService = async (
 
         const ticket = await createTicketRepo(ticketData);
         logger.info(`Ticket created successfully: ${ticket.id}`);
+
+        // If this is a municipal complaint, notify officers
+        if (ticket.category === TicketCategory.MUNICIPAL && ticket.complaintType) {
+            try {
+                // Get all officers (in a real system, you might filter by zone)
+                const officers = await officerRepository.findAll();
+
+                // Create notifications for all officers
+                for (const officer of officers) {
+                    await createNotificationService({
+                        officerId: officer.id,
+                        ticketId: ticket.id,
+                        message: `New municipal complaint: ${ticket.complaintType} - ${ticket.title}${ticket.location ? ` at ${ticket.location}` : ''}`
+                    });
+                }
+
+                logger.info(`Created notifications for ${officers.length} officers for ticket ${ticket.id}`);
+            } catch (notificationError) {
+                // Log error but don't fail the ticket creation
+                logger.error('Error creating officer notifications:', notificationError);
+            }
+        }
 
         return {
             success: true,
