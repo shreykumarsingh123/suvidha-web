@@ -1,0 +1,23 @@
+services:
+  # Backend API Service
+  - type: web
+    name: suvidha-backend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node dist/app.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      # Add these in Render Dashboard (they're secrets):
+      # DATABASE_URL
+      # CASHFREE_APP_ID
+      # CASHFREE_SECRET_KEY
+      # MSG91_AUTH_KEY
+      # JWT_SECRET
+      # DATA_ENCRYPTION_KEY
+      # FRONTEND_URL
