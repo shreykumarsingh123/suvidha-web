@@ -10,6 +10,7 @@ import {
 import { CreateTicketDto, UpdateTicketDto, Ticket, TicketCategory } from '../models/ticket.model';
 import { officerRepository } from '../repositories/officer.repository';
 import { createNotificationService } from './notification.service';
+import { pool } from '../db/postgres';
 
 interface ServiceResponse<T> {
     success: boolean;
@@ -128,17 +129,28 @@ export const getTicketByIdService = async (
     }
 };
 
-/**
- * Get all tickets
- */
-export const getAllTicketsService = async (): Promise<ServiceResponse<Ticket[]>> => {
+// Service to get all tickets (PUBLIC - with user's tickets first if userId provided)
+export async function getAllTicketsService(userId?: number | null): Promise<ServiceResponse<Ticket[]>> {
     try {
-        const tickets = await findAllTickets();
+        let query = `
+            SELECT 
+                t.*,
+                u.full_name as user_name,
+                u.mobile_number as user_mobile
+            FROM tickets t
+            LEFT JOIN users u ON t.user_id = u.id
+            ORDER BY 
+                ${userId ? `CASE WHEN t.user_id = $1 THEN 0 ELSE 1 END,` : ''}
+                t.created_at DESC
+        `;
+
+        const params = userId ? [userId] : [];
+        const result = await pool.query(query, params);
 
         return {
             success: true,
             message: 'Tickets retrieved successfully',
-            data: tickets,
+            data: result.rows,
         };
     } catch (error) {
         logger.error('Error in getAllTicketsService:', error);
@@ -147,7 +159,7 @@ export const getAllTicketsService = async (): Promise<ServiceResponse<Ticket[]>>
             message: 'Failed to retrieve tickets',
         };
     }
-};
+}
 
 /**
  * Get tickets by user ID

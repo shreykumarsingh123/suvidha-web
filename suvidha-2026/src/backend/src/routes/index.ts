@@ -3,6 +3,7 @@ import { HelpdeskController } from '../controllers/helpdesk.controller';
 import { BillController } from '../controllers/bill.controller';
 import { UserController } from '../controllers/user.controller';
 import authRoutes from './auth.routes';
+import adminRoutes from './admin.routes';
 import paymentRoutes from '../controllers/payment.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
@@ -13,6 +14,9 @@ const userController = new UserController();
 
 // Auth Routes (no authentication required)
 router.use('/auth', authRoutes);
+
+// Admin Routes (authentication required)
+router.use('/admin', adminRoutes);
 
 // Payment Routes
 router.use('/payments', paymentRoutes);
@@ -31,11 +35,13 @@ router.put('/bills/:id', authenticateToken, billController.updateBill.bind(billC
 router.delete('/bills/:id', authenticateToken, billController.deleteBill.bind(billController));
 router.post('/bills/:id/pay', authenticateToken, billController.markBillAsPaid.bind(billController));
 
-// Ticket Routes (authentication required)
-router.get('/tickets', authenticateToken, helpdeskController.getAllTickets.bind(helpdeskController));
+// Ticket Routes (PUBLIC - no authentication required for complaints)
+router.get('/tickets', helpdeskController.getAllTickets.bind(helpdeskController));
+router.post('/tickets', helpdeskController.createTicket.bind(helpdeskController));
+router.get('/tickets/:id', helpdeskController.getTicket.bind(helpdeskController));
+
+// Authenticated ticket routes
 router.get('/tickets/user/:userId', authenticateToken, helpdeskController.getTicketsByUserId.bind(helpdeskController));
-router.post('/tickets', authenticateToken, helpdeskController.createTicket.bind(helpdeskController));
-router.get('/tickets/:id', authenticateToken, helpdeskController.getTicket.bind(helpdeskController));
 router.put('/tickets/:id', authenticateToken, helpdeskController.updateTicket.bind(helpdeskController));
 router.delete('/tickets/:id', authenticateToken, helpdeskController.deleteTicket.bind(helpdeskController));
 

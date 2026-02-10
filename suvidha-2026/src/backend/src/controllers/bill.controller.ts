@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../types/auth.types';
 import {
     createBillService,
     getBillByIdService,
@@ -10,13 +11,6 @@ import {
 } from '../services/bill.service';
 import { CreateBillDto, UpdateBillDto } from '../models/bill.model';
 import logger from '../utils/logger';
-
-interface AuthRequest extends Request {
-    user?: {
-        id: number;
-        mobile: string;
-    };
-}
 
 export class BillController {
     /**

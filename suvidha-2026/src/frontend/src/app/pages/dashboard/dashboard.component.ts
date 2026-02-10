@@ -64,6 +64,27 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
+  /**
+   * Get username from current user or return default
+   */
+  get username(): string {
+    const user = this.authService.getCurrentUser();
+    return user?.username || 'Guest User';
+  }
+
+  /**
+   * Get masked mobile number showing only last 4 digits
+   * Format: ******1234
+   */
+  get maskedMobile(): string {
+    const user = this.authService.getCurrentUser();
+    const mobile = user?.mobileNumber || user?.mobile || '';
+    if (mobile.length >= 4) {
+      return '******' + mobile.slice(-4);
+    }
+    return '**********';
+  }
+
   openService(type: string): void {
     // Handle municipal complaints separately
     if (type === 'muni') {
@@ -75,7 +96,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   navigateToPayment(): void {
-    this.router.navigate(['/payment']);
+    this.router.navigate(['/transaction-history']);
   }
 
   navigateToBills(): void {
@@ -92,6 +113,36 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   newConnection(): void {
     this.router.navigate(['/new-connection']);
+  }
+
+  navigateToDigiLocker(): void {
+    // Show toast notification
+    this.showToast('DigiLocker feature coming soon! No government API access yet :(');
+    // Redirect back to dashboard after 2 seconds
+    setTimeout(() => {
+      // Already on dashboard, just refresh icons
+      this.initializeIcons();
+    }, 2000);
+  }
+
+  private showToast(message: string): void {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-24 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 animate-enter font-bold text-lg';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+      setTimeout(() => {
+        document.body.removeChild(toast);
+      }, 500);
+    }, 2500);
+  }
+
+  navigateToAdmin(): void {
+    this.router.navigate(['/admin']);
   }
 
   logout(): void {

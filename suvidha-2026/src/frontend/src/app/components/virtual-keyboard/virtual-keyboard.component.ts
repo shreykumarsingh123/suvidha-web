@@ -10,6 +10,15 @@ declare const lucide: any;
     template: `
         <div class="w-full h-full bg-slate-200 rounded-[2rem] shadow-xl border border-slate-300 flex flex-col p-6 animate-enter">
             <div class="flex-1 flex flex-col justify-center gap-3">
+                <!-- Row 0: Numbers --!>
+                <div class="flex justify-center gap-2 w-full">
+                    <button *ngFor="let key of numberRow" 
+                            (click)="onKeyPress(key)"
+                            class="key-btn flex-1 cursor-pointer">
+                        {{key}}
+                    </button>
+                </div>
+                
                 <!-- Row 1: QWERTY Top Row -->
                 <div class="flex justify-center gap-2 w-full">
                     <button *ngFor="let key of topRow" 
@@ -88,19 +97,43 @@ export class VirtualKeyboardComponent implements AfterViewInit, OnDestroy {
     @Output() keyPressed = new EventEmitter<string>();
     @Output() close = new EventEmitter<void>();
 
+    numberRow = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
     topRow = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
     middleRow = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
     bottomRow = ['Z', 'X', 'C', 'V', 'B', 'N', 'M'];
+
+    private keyboardListener: ((e: KeyboardEvent) => void) | null = null;
 
     ngAfterViewInit() {
         // Initialize Lucide icons after view is ready
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+
+        // Add physical keyboard support
+        this.keyboardListener = (e: KeyboardEvent) => {
+            e.preventDefault();
+
+            if (e.key === 'Backspace') {
+                this.onBackspace();
+            } else if (e.key === 'Enter') {
+                this.onEnter();
+            } else if (e.key === ' ') {
+                this.onSpace();
+            } else if (e.key.length === 1) {
+                // Handle alphanumeric keys
+                this.onKeyPress(e.key.toUpperCase());
+            }
+        };
+
+        window.addEventListener('keydown', this.keyboardListener);
     }
 
     ngOnDestroy() {
-        // Clean up if needed
+        // Remove physical keyboard listener
+        if (this.keyboardListener) {
+            window.removeEventListener('keydown', this.keyboardListener);
+        }
     }
 
     onKeyPress(key: string) {

@@ -1,15 +1,9 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../types/auth.types';
 import { userRepository } from '../repositories/user.repository';
 import { billRepository } from '../repositories/bill.repository';
 import { findTicketsByUserId } from '../repositories/ticket.repository';
 import logger from '../utils/logger';
-
-interface AuthRequest extends Request {
-    user?: {
-        id: number;
-        mobile: string;
-    };
-}
 
 export class UserController {
     /**

@@ -1,0 +1,428 @@
+<!-- Admin Dashboard Container -->
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                    SUVIDHA Admin Dashboard
+                </h1>
+                <p class="text-sm text-gray-600 mt-1">Comprehensive Kiosk Management & Analytics</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button (click)="exportData()"
+                    class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Export Data
+                </button>
+                <button (click)="logout()"
+                    class="bg-red-50 hover:bg-red-100 text-red-700 px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-[1600px] mx-auto px-6 py-8">
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-xl shadow-lg p-2 mb-8 flex gap-2">
+            <button (click)="activeTab = 'revenue'"
+                [class]="activeTab === 'revenue' ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'"
+                class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all flex items-center justify-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                Revenue Analytics
+            </button>
+            <button (click)="activeTab = 'complaints'"
+                [class]="activeTab === 'complaints' ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'"
+                class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all flex items-center justify-center gap-2">
+                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                Complaints Management
+            </button>
+        </div>
+
+        <!-- Revenue Analytics Tab -->
+        <div *ngIf="activeTab === 'revenue' && revenueStats" class="space-y-6">
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Total Revenue -->
+                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between mb-2">
+                        <i data-lucide="indian-rupee" class="w-8 h-8"></i>
+                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full">Total</span>
+                    </div>
+                    <p class="text-sm opacity-90 mb-1">Total Revenue</p>
+                    <p class="text-3xl font-bold">{{ formatCurrency(revenueStats.summary.totalRevenue) }}</p>
+                </div>
+
+                <!-- Category Cards -->
+                <div *ngFor="let category of ['electricity', 'water', 'gas', 'municipal']"
+                    class="bg-white rounded-xl shadow-lg p-6 border-l-4"
+                    [class.border-blue-500]="category === 'electricity'" [class.border-cyan-500]="category === 'water'"
+                    [class.border-orange-500]="category === 'gas'" [class.border-purple-500]="category === 'municipal'">
+                    <div class="flex items-center justify-between mb-3">
+                        <i [attr.data-lucide]="getCategoryIcon(category)" class="w-6 h-6 text-gray-600"></i>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ category }}</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-900 mb-1">
+                        {{ formatCurrency(revenueStats.summary.byCategory[category]?.paidAmount || 0) }}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                        {{ revenueStats.summary.byCategory[category]?.paidBills || 0 }} bills paid
+                    </p>
+                </div>
+            </div>
+
+            <!-- Detailed Bills Table -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                        Detailed Bill Records
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-1">Complete transaction history with all metadata</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Bill ID</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Date & Time</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    User</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Service</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Amount</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Payment Method</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Transaction ID</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr *ngFor="let bill of revenueStats.detailedBills"
+                                class="hover:bg-gray-50 transition-colors">
+                                <td class="py-4 px-4">
+                                    <span class="font-mono text-sm font-semibold text-blue-600">#{{ bill.id }}</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="text-sm text-gray-900">{{ formatDate(bill.created_at) }}</div>
+                                    <div class="text-xs text-gray-500">{{ formatDate(bill.paid_at) }}</div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ bill.user_name || 'N/A' }}</div>
+                                    <div class="text-xs text-gray-500 font-mono">{{ bill.mobile_number }}</div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span
+                                        class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold"
+                                        [class.bg-blue-100]="bill.service_type === 'electricity'"
+                                        [class.text-blue-700]="bill.service_type === 'electricity'"
+                                        [class.bg-cyan-100]="bill.service_type === 'water'"
+                                        [class.text-cyan-700]="bill.service_type === 'water'"
+                                        [class.bg-orange-100]="bill.service_type === 'gas'"
+                                        [class.text-orange-700]="bill.service_type === 'gas'"
+                                        [class.bg-purple-100]="bill.service_type === 'municipal'"
+                                        [class.text-purple-700]="bill.service_type === 'municipal'">
+                                        <i [attr.data-lucide]="getCategoryIcon(bill.service_type)" class="w-3 h-3"></i>
+                                        {{ bill.service_type }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span class="text-sm font-bold text-gray-900">{{ formatCurrency(bill.amount)
+                                        }}</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span class="text-sm text-gray-700">{{ bill.payment_method || 'N/A' }}</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span class="text-xs font-mono text-gray-600">{{ bill.transaction_id || 'N/A'
+                                        }}</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                                        [class.bg-green-100]="bill.payment_status === 'paid'"
+                                        [class.text-green-700]="bill.payment_status === 'paid'"
+                                        [class.bg-yellow-100]="bill.payment_status === 'pending'"
+                                        [class.text-yellow-700]="bill.payment_status === 'pending'"
+                                        [class.bg-red-100]="bill.payment_status === 'failed'"
+                                        [class.text-red-700]="bill.payment_status === 'failed'">
+                                        {{ bill.payment_status }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <button (click)="viewBillDetails(bill)"
+                                        class="text-blue-600 hover:text-blue-800 font-semibold text-sm flex items-center gap-1">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complaints Management Tab -->
+        <div *ngIf="activeTab === 'complaints'" class="space-y-6">
+
+            <!-- Filters and Search -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="flex-1 min-w-[300px]">
+                        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="loadComplaints()"
+                            placeholder="Search complaints by title or description..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <select [(ngModel)]="statusFilter" (ngModelChange)="loadComplaints()"
+                        class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">All Status</option>
+                        <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Complaints Statistics -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div *ngFor="let stat of complaintStats" class="bg-white rounded-xl shadow-lg p-4 text-center">
+                    <p class="text-2xl font-bold" [ngClass]="getStatusColor(stat.status)">{{ stat.count }}</p>
+                    <p class="text-xs text-gray-600 mt-1">{{ getStatusLabel(stat.status) }}</p>
+                </div>
+            </div>
+
+            <!-- Complaints Table -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                        All Registered Complaints
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-1">Manage and update complaint status</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    ID</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Date</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    User</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Title</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Category</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Priority</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Assigned To</th>
+                                <th
+                                    class="text-left py-4 px-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr *ngFor="let complaint of complaints" class="hover:bg-gray-50 transition-colors">
+                                <td class="py-4 px-4">
+                                    <span class="font-mono text-sm font-semibold text-blue-600">#{{ complaint.id
+                                        }}</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="text-sm text-gray-900">{{ formatDate(complaint.created_at) }}</div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ complaint.user_name || 'Anonymous'
+                                        }}</div>
+                                    <div class="text-xs text-gray-500 font-mono">{{ complaint.mobile_number }}</div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="text-sm font-medium text-gray-900 max-w-xs truncate">{{ complaint.title
+                                        }}</div>
+                                    <div class="text-xs text-gray-500">{{ complaint.location }}</div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span class="text-sm text-gray-700">{{ complaint.category }}</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                                        [ngClass]="getPriorityColor(complaint.priority)">
+                                        {{ complaint.priority }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <select [(ngModel)]="complaint.status"
+                                        (ngModelChange)="updateComplaintStatus(complaint, complaint.status)"
+                                        class="px-3 py-1 rounded-lg text-xs font-semibold border-2 cursor-pointer transition-all"
+                                        [ngClass]="getStatusColor(complaint.status)">
+                                        <option *ngFor="let status of statusOptions" [value]="status.value">{{
+                                            status.label }}</option>
+                                    </select>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span class="text-sm text-gray-700">{{ complaint.assigned_officer_name ||
+                                        'Unassigned' }}</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <button (click)="viewComplaintDetails(complaint)"
+                                        class="text-blue-600 hover:text-blue-800 font-semibold text-sm flex items-center gap-1">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="flex items-center justify-center py-20">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Bill Details Modal -->
+<div *ngIf="selectedBill" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    (click)="closeModal()">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        (click)="$event.stopPropagation()">
+        <div class="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+            <h3 class="text-xl font-bold text-gray-900">Bill Details #{{ selectedBill.id }}</h3>
+            <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Bill Number</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ selectedBill.bill_number }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Service Type</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ selectedBill.service_type }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Amount</p>
+                    <p class="text-lg font-bold text-green-600">{{ formatCurrency(selectedBill.amount) }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Payment Status</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ selectedBill.payment_status }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Created At</p>
+                    <p class="text-sm text-gray-900">{{ formatDate(selectedBill.created_at) }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Paid At</p>
+                    <p class="text-sm text-gray-900">{{ formatDate(selectedBill.paid_at) }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Transaction ID</p>
+                    <p class="text-xs font-mono text-gray-900">{{ selectedBill.transaction_id || 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Payment Method</p>
+                    <p class="text-sm text-gray-900">{{ selectedBill.payment_method || 'N/A' }}</p>
+                </div>
+            </div>
+            <div *ngIf="selectedBill.payment_gateway_response" class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Gateway Response</p>
+                <pre
+                    class="text-xs text-gray-900 overflow-x-auto">{{ selectedBill.payment_gateway_response | json }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Complaint Details Modal -->
+<div *ngIf="selectedComplaint" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    (click)="closeModal()">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        (click)="$event.stopPropagation()">
+        <div class="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+            <h3 class="text-xl font-bold text-gray-900">Complaint #{{ selectedComplaint.id }}</h3>
+            <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Title</p>
+                <p class="text-lg font-semibold text-gray-900">{{ selectedComplaint.title }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Description</p>
+                <p class="text-sm text-gray-700">{{ selectedComplaint.description }}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Category</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ selectedComplaint.category }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Priority</p>
+                    <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                        [ngClass]="getPriorityColor(selectedComplaint.priority)">
+                        {{ selectedComplaint.priority }}
+                    </span>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Status</p>
+                    <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                        [ngClass]="getStatusColor(selectedComplaint.status)">
+                        {{ getStatusLabel(selectedComplaint.status) }}
+                    </span>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Location</p>
+                    <p class="text-sm text-gray-900">{{ selectedComplaint.location }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Created At</p>
+                    <p class="text-sm text-gray-900">{{ formatDate(selectedComplaint.created_at) }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Updated At</p>
+                    <p class="text-sm text-gray-900">{{ formatDate(selectedComplaint.updated_at) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

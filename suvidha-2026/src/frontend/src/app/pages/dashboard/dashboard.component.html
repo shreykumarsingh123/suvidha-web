@@ -1,6 +1,33 @@
 <!-- MAIN DASHBOARD CONTENT -->
 <div class="flex-1 px-8 pt-24 pb-8 w-full max-w-[1400px] mx-auto flex flex-col justify-start animate-enter">
 
+    <!-- USER INFO HEADER -->
+    <div class="w-full mb-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="bg-white/20 p-3 rounded-full backdrop-blur-sm">
+                    <i data-lucide="user" class="w-8 h-8 text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold">{{ username }}</h2>
+                    <p class="text-blue-100 font-mono text-lg tracking-wider">{{ maskedMobile }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-blue-100 text-sm font-semibold">Welcome to SUVIDHA</p>
+                    <p class="text-white text-xl font-bold">{{ currentTime }}</p>
+                </div>
+                <!-- Admin Dashboard Button -->
+                <button (click)="navigateToAdmin()"
+                    class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all border border-white/30 hover:scale-105">
+                    <i data-lucide="shield" class="w-5 h-5"></i>
+                    <span>Admin Panel</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ALERT SECTION (Fixed Marquee with Seamless Loop) -->
     <div class="w-full mb-6 z-20">
         <div
@@ -88,7 +115,23 @@
             </div>
         </div>
 
-        <!-- 5. TRANSACTION HISTORY -->
+        <!-- 5. DIGILOCKER -->
+        <div (click)="navigateToDigiLocker()" class="kiosk-card card-light cursor-pointer min-h-[280px]">
+            <div class="p-8 flex-1 flex flex-col justify-start items-start pb-14">
+                <div class="bg-blue-100 p-4 rounded-xl mb-6 shadow-sm flex items-center justify-center">
+                    <!-- DigiLocker Image Icon -->
+                    <img src="./image.png" alt="DigiLocker" class="w-10 h-10 object-contain">
+                </div>
+                <h3 class="text-3xl font-black text-slate-800 mb-2 tracking-tight">DigiLocker</h3>
+                <p class="text-slate-500 font-bold text-sm">Access digital documents</p>
+            </div>
+            <div class="action-strip bg-blue-50 border-t border-blue-100 text-blue-700 absolute bottom-0 left-0">
+                <span>Open DigiLocker</span>
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- 6. TRANSACTION HISTORY -->
         <div (click)="navigateToPayment()" class="kiosk-card card-light cursor-pointer min-h-[280px]">
             <div class="p-8 flex-1 flex flex-col justify-start items-start pb-14">
                 <div class="bg-orange-100 p-4 rounded-xl mb-6 shadow-sm">
@@ -103,7 +146,7 @@
             </div>
         </div>
 
-        <!-- 6. TRACK REQUEST -->
+        <!-- 7. TRACK REQUEST -->
         <div (click)="trackRequest()" class="kiosk-card card-light cursor-pointer min-h-[280px]">
             <div class="p-8 flex-1 flex flex-col justify-start items-start pb-14">
                 <div class="bg-indigo-100 p-4 rounded-xl mb-6 shadow-sm">

@@ -12,14 +12,11 @@ import { CreateTicketDto, UpdateTicketDto } from '../models/ticket.model';
 import logger from '../utils/logger';
 
 export class HelpdeskController {
-    // Method to create a new ticket
-    public async createTicket(req: AuthRequest, res: Response) {
+    // Method to create a new ticket (PUBLIC - no auth required)
+    public async createTicket(req: any, res: Response) {
         try {
-            const userId = req.user?.id;
-            if (!userId) {
-                res.status(401).json({ message: 'Unauthorized' });
-                return;
-            }
+            // Allow anonymous ticket creation
+            const userId = req.user?.id || null;
 
             const ticketData: CreateTicketDto = {
                 ...req.body,
@@ -67,16 +64,16 @@ export class HelpdeskController {
         }
     }
 
-    // Method to get all tickets
-    public async getAllTickets(req: AuthRequest, res: Response) {
+    // Method to get all tickets (PUBLIC - for complaint tracking board)
+    public async getAllTickets(req: any, res: Response) {
         try {
-            const result = await getAllTicketsService();
+            const userId = req.user?.id || null;
+            const result = await getAllTicketsService(userId);
 
             if (result.success) {
                 res.status(200).json({
                     message: result.message,
                     tickets: result.data,
-                    count: result.data?.length || 0,
                 });
             } else {
                 res.status(500).json({ message: result.message });
@@ -90,9 +87,9 @@ export class HelpdeskController {
     // Method to get tickets by user ID
     public async getTicketsByUserId(req: AuthRequest, res: Response) {
         try {
-            const userId = parseInt(req.params.userId, 10);
-            if (isNaN(userId)) {
-                res.status(400).json({ message: 'Invalid user ID' });
+            const userId = req.user?.id;
+            if (!userId) {
+                res.status(401).json({ message: 'Unauthorized' });
                 return;
             }
 
@@ -102,7 +99,6 @@ export class HelpdeskController {
                 res.status(200).json({
                     message: result.message,
                     tickets: result.data,
-                    count: result.data?.length || 0,
                 });
             } else {
                 res.status(500).json({ message: result.message });
@@ -161,3 +157,12 @@ export class HelpdeskController {
         }
     }
 }
+
+const helpdeskController = new HelpdeskController();
+
+export const createTicket = helpdeskController.createTicket.bind(helpdeskController);
+export const getTicket = helpdeskController.getTicket.bind(helpdeskController);
+export const getAllTickets = helpdeskController.getAllTickets.bind(helpdeskController);
+export const getTicketsByUserId = helpdeskController.getTicketsByUserId.bind(helpdeskController);
+export const updateTicket = helpdeskController.updateTicket.bind(helpdeskController);
+export const deleteTicket = helpdeskController.deleteTicket.bind(helpdeskController);

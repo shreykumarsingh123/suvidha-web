@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
@@ -73,7 +73,7 @@ import { IdleService } from '../../../core/services/idle.service';
     </div>
   `
 })
-export class OtpComponent implements OnInit {
+export class OtpComponent implements OnInit, OnDestroy {
     otp = signal('');
     mobileNumber = '';
     authService = inject(AuthService);
@@ -83,6 +83,7 @@ export class OtpComponent implements OnInit {
     resendTimer = signal(30);
     canResend = signal(false);
     lastOtpReceived = signal('');
+    private keyboardListener: ((e: KeyboardEvent) => void) | null = null;
 
     ngOnInit() {
         this.route.queryParams.subscribe(params => {
@@ -93,6 +94,32 @@ export class OtpComponent implements OnInit {
                 this.startResendTimer();
             }
         });
+
+        // Add physical keyboard support
+        this.keyboardListener = (e: KeyboardEvent) => {
+            if (e.key >= '0' && e.key <= '9') {
+                e.preventDefault();
+                this.addKey(e.key);
+            } else if (e.key === 'Backspace') {
+                e.preventDefault();
+                this.delKey();
+            } else if (e.key === 'Delete') {
+                e.preventDefault();
+                this.clearKey();
+            } else if (e.key === 'Enter' && this.otp().length === 6) {
+                e.preventDefault();
+                this.verify();
+            }
+        };
+
+        window.addEventListener('keydown', this.keyboardListener);
+    }
+
+    ngOnDestroy() {
+        // Remove keyboard listener
+        if (this.keyboardListener) {
+            window.removeEventListener('keydown', this.keyboardListener);
+        }
     }
 
     private startResendTimer() {

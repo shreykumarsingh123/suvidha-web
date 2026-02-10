@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
@@ -65,10 +65,39 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, OnDestroy {
     mobileNumber = signal('');
     authService = inject(AuthService);
     router = inject(Router);
+    private keyboardListener: ((e: KeyboardEvent) => void) | null = null;
+
+    ngOnInit() {
+        // Add physical keyboard support
+        this.keyboardListener = (e: KeyboardEvent) => {
+            if (e.key >= '0' && e.key <= '9') {
+                e.preventDefault();
+                this.addKey(e.key);
+            } else if (e.key === 'Backspace') {
+                e.preventDefault();
+                this.delKey();
+            } else if (e.key === 'Delete') {
+                e.preventDefault();
+                this.clearKey();
+            } else if (e.key === 'Enter' && this.mobileNumber().length === 10) {
+                e.preventDefault();
+                this.proceed();
+            }
+        };
+
+        window.addEventListener('keydown', this.keyboardListener);
+    }
+
+    ngOnDestroy() {
+        // Remove keyboard listener
+        if (this.keyboardListener) {
+            window.removeEventListener('keydown', this.keyboardListener);
+        }
+    }
 
     addKey(key: string) {
         if (this.mobileNumber().length < 10) {
@@ -96,9 +125,11 @@ export class LoginComponent {
                 next: () => {
                     this.router.navigate(['/otp'], { queryParams: { mobile: this.mobileNumber() } });
                 },
-                error: (err: any) => console.error(err)
+                error: (err) => {
+                    console.error('Error requesting OTP:', err);
+                    alert('Failed to send OTP. Please try again.');
+                }
             });
         }
     }
 }
-

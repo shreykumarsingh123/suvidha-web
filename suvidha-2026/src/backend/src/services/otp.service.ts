@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import logger from '../utils/logger';
-import { sendOtp as sendOtpViaTwilio } from '../utils/twilio';
+import { sendOtp as sendOtpViaMSG91 } from '../utils/msg91';
 import { decryptValue, encryptValue } from '../utils/encryption';
 import {
     clearUserOtp,
@@ -59,7 +59,7 @@ export const requestOtpService = async (mobileNumber: string): Promise<{
 
         await upsertUserOtp(mobileNumber, encryptedOtp, otpExpires);
 
-        const smsSent = await sendOtpViaTwilio(mobileNumber, otp);
+        const smsSent = await sendOtpViaMSG91(mobileNumber, otp);
 
         if (!smsSent) {
             logger.warn(
@@ -220,7 +220,7 @@ export const resendOtpService = async (mobileNumber: string): Promise<{
         }
 
         const otp = decryptValue(user.otpEncrypted);
-        const smsSent = await sendOtpViaTwilio(mobileNumber, otp);
+        const smsSent = await sendOtpViaMSG91(mobileNumber, otp);
 
         if (!smsSent) {
             logger.warn(`Failed to resend OTP to ${mobileNumber}`);
