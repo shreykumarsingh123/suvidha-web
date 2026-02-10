@@ -1,5 +1,11 @@
 {
+  "buildCommand": "npm run build -- --configuration production",
+  "outputDirectory": "dist/suvidha-2026/browser",
+  "framework": "angular",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

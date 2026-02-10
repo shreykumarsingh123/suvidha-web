@@ -1,0 +1,15 @@
+# Vercel ignore patterns
+node_modules
+.git
+.env
+.env.local
+*.log
+.DS_Store
+dist
+coverage
+.angular
+.vscode
+*.spec.ts
+
+# Backend files (not needed for frontend deployment)
+../../backend

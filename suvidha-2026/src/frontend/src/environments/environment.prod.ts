@@ -1,4 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.example.com/api'
+  // TODO: Replace with your actual backend URL after deploying to Render/Railway
+  // Example: 'https://suvidha-backend.onrender.com/api'
+  apiUrl: 'https://your-backend-url.onrender.com/api'
 };
