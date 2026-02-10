@@ -26,14 +26,17 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent },
-      { path: 'admin', component: DashboardComponent },
+      { path: 'admin', loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
       { path: 'provider-select', component: ProviderSelectComponent },
       { path: 'consumer-input', component: ConsumerInputComponent },
       { path: 'service/:id', component: ServiceDetailComponent },
       { path: 'payment', component: PaymentComponent },
       { path: 'receipt', component: ReceiptComponent },
       { path: 'bills', loadComponent: () => import('./components/bills-list/bills-list.component').then(m => m.BillsListComponent) },
-      { path: 'complaints', loadComponent: () => import('./components/complaint-form/complaint-form.component').then(m => m.ComplaintFormComponent) }
+      { path: 'complaints', loadComponent: () => import('./components/complaint-form/complaint-form.component').then(m => m.ComplaintFormComponent) },
+      { path: 'track-complaints', loadComponent: () => import('./components/complaint-tracking/complaint-tracking.component').then(m => m.ComplaintTrackingComponent) },
+      { path: 'new-connection', loadComponent: () => import('./pages/new-connection/new-connection.component').then(m => m.NewConnectionComponent) },
+      { path: 'meter-reading', loadComponent: () => import('./pages/meter-reading/meter-reading.component').then(m => m.MeterReadingComponent) }
     ]
   },
 

@@ -139,12 +139,12 @@ export class ComplaintTrackingComponent implements OnInit {
         this.loading = true;
         this.error = '';
 
-        this.complaintService.getComplaints().subscribe({
-            next: (data) => {
+        this.complaintService.getAllComplaints().subscribe({
+            next: (data: any) => {
                 this.complaints = data;
                 this.loading = false;
             },
-            error: (err) => {
+            error: (err: any) => {
                 console.error('Error loading complaints:', err);
                 this.error = 'Failed to load complaints. Please try again.';
                 this.loading = false;

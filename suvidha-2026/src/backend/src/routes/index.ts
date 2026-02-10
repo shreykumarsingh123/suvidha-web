@@ -3,6 +3,7 @@ import { HelpdeskController } from '../controllers/helpdesk.controller';
 import { BillController } from '../controllers/bill.controller';
 import { UserController } from '../controllers/user.controller';
 import authRoutes from './auth.routes';
+import paymentRoutes from '../controllers/payment.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -12,6 +13,9 @@ const userController = new UserController();
 
 // Auth Routes (no authentication required)
 router.use('/auth', authRoutes);
+
+// Payment Routes
+router.use('/payments', paymentRoutes);
 
 // User Profile Routes
 router.get('/users/profile/:mobileNumber', userController.getUserProfile.bind(userController));

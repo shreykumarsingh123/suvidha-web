@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { IdleService } from '../../../core/services/idle.service';
 
 @Component({
     selector: 'app-otp',
@@ -76,6 +77,7 @@ export class OtpComponent implements OnInit {
     otp = signal('');
     mobileNumber = '';
     authService = inject(AuthService);
+    idleService = inject(IdleService);
     router = inject(Router);
     route = inject(ActivatedRoute);
     resendTimer = signal(30);
@@ -130,6 +132,8 @@ export class OtpComponent implements OnInit {
             this.authService.verifyOtp(this.mobileNumber, this.otp()).subscribe({
                 next: () => {
                     sessionStorage.removeItem('mobile');
+                    // Start idle timer when user logs in
+                    this.idleService.startIdleTimer();
                     this.router.navigate(['/dashboard']);
                 },
                 error: (err: any) => {

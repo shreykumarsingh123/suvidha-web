@@ -16,7 +16,11 @@ export class IdleService {
     remainingTime = this.secondsRemaining.asReadonly();
 
     constructor() {
-        this.setupListeners();
+        // Don't start timer automatically - wait for explicit start
+    }
+
+    startIdleTimer() {
+        // Don't setup listeners - timer should run continuously without reset
         this.startTimer();
     }
 

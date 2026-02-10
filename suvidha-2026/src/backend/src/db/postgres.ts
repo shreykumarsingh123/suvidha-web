@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import { config } from '../config';
 import logger from '../utils/logger';
 
-const pool = new Pool({
+export const pool = new Pool({
     connectionString: config.postgres.url,
     max: config.postgres.poolMax,
     idleTimeoutMillis: config.postgres.idleTimeoutMs,

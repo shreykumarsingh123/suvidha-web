@@ -65,6 +65,11 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   openService(type: string): void {
+    // Handle municipal complaints separately
+    if (type === 'muni') {
+      this.router.navigate(['/complaints']);
+      return;
+    }
     // Navigate to provider selection with service type
     this.router.navigate(['/provider-select'], { queryParams: { type } });
   }
@@ -82,11 +87,14 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   trackRequest(): void {
-    alert('Track Request feature coming soon!');
+    this.router.navigate(['/track-complaints']);
+  }
+
+  newConnection(): void {
+    this.router.navigate(['/new-connection']);
   }
 
   logout(): void {
     this.authService.logout();
   }
 }
-
