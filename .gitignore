@@ -47,6 +47,8 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 pnpm-debug.log*
+combined.log
+error.log
 
 # Testing
 coverage/
@@ -84,3 +86,7 @@ connect.lock
 typings/
 .eslintcache
 .stylelintcache
+
+# Deployment configs (optional - keep local copies)
+# render.yaml
+# vercel.json
