@@ -137,5 +137,83 @@ export const initializeDatabase = async (): Promise<void> => {
         CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
     `);
 
-    logger.info('✅ Database schema ensured successfully (users, tickets, bills, officers, notifications)');
+    // Create payments table
+    await query(`
+        CREATE TABLE IF NOT EXISTS payments (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            bill_id INTEGER REFERENCES bills(id) ON DELETE SET NULL,
+            order_id TEXT UNIQUE NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            transaction_id TEXT,
+            cashfree_order_id TEXT,
+            cashfree_payment_id TEXT,
+            payment_method TEXT,
+            payment_gateway_response JSONB,
+            payment_session_id TEXT,
+            payment_time TIMESTAMPTZ,
+            failure_reason TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+    `);
+
+    // Create indexes for payments
+    await query(`
+        CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
+        CREATE INDEX IF NOT EXISTS idx_payments_bill_id ON payments(bill_id);
+        CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+        CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+    `);
+
+    // Add missing columns to users table
+    await query(`
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='users' AND column_name='email') THEN
+                ALTER TABLE users ADD COLUMN email TEXT;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='users' AND column_name='name') THEN
+                ALTER TABLE users ADD COLUMN name TEXT;
+            END IF;
+        END $$;
+    `);
+
+    // Add missing columns to payments table
+    await query(`
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='payments' AND column_name='cashfree_order_id') THEN
+                ALTER TABLE payments ADD COLUMN cashfree_order_id TEXT;
+            END IF;
+        END $$;
+    `);
+
+    // Add missing columns to tickets table
+    await query(`
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='tickets' AND column_name='resolved_at') THEN
+                ALTER TABLE tickets ADD COLUMN resolved_at TIMESTAMPTZ;
+            END IF;
+        END $$;
+    `);
+
+    // Add missing columns to bills table
+    await query(`
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='bills' AND column_name='bill_number') THEN
+                ALTER TABLE bills ADD COLUMN bill_number TEXT;
+            END IF;
+        END $$;
+    `);
+
+    logger.info('✅ Database schema ensured successfully (users, tickets, bills, officers, notifications, payments)');
 };

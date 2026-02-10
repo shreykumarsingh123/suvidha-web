@@ -25,6 +25,7 @@ export interface Complaint {
 }
 
 export interface CreateComplaintDto {
+    userId?: number;
     title: string;
     description: string;
     category: string;

@@ -13,8 +13,10 @@ import {
     getUserPayments,
 } from '../services/payment.service';
 import { generateReceipt } from '../services/receipt.service';
-import { findUserById } from '../db/user.db';
+import { userRepository } from '../repositories/user.repository';
+import { sanitizeObject, validatePaymentData, sanitizeWebhookData } from '../utils/security';
 import logger from '../utils/logger';
+
 
 const router = Router();
 
@@ -24,18 +26,30 @@ const router = Router();
 router.post('/create-order', authenticateToken, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
-        const { amount, billId, customerName, customerPhone } = req.body;
 
-        if (!amount || !customerName || !customerPhone) {
+        logger.info(`Payment order creation request received. UserId: ${userId}`);
+        logger.info(`Request body:`, JSON.stringify(req.body));
+
+        // Sanitize incoming data to prevent prototype pollution
+        const sanitizedBody = sanitizeObject(req.body);
+        const { amount, billId, customerName, customerPhone } = sanitizedBody;
+
+        // Validate payment data - handle amount as it comes (could be number or string)
+        const numericAmount = typeof amount === 'number' ? amount : parseFloat(amount);
+        logger.info(`Validating payment: amount=${numericAmount}, customerName=${customerName}, customerPhone=${customerPhone}`);
+        const validation = validatePaymentData({ amount: numericAmount, customerName, customerPhone });
+        if (!validation.valid) {
+            logger.error(`Payment validation failed:`, validation.errors);
             return res.status(400).json({
                 success: false,
-                message: 'Missing required fields',
+                message: 'Invalid payment data',
+                errors: validation.errors,
             });
         }
 
         // Create payment record in database
         const orderId = generateOrderId();
-        const payment = await createPayment(userId, billId || null, parseFloat(amount), orderId);
+        const payment = await createPayment(userId, billId || null, numericAmount, orderId);
 
         if (!payment) {
             return res.status(500).json({
@@ -49,7 +63,7 @@ router.post('/create-order', authenticateToken, async (req: Request, res: Respon
 
         const cashfreeOrder = await createPaymentOrder({
             orderId: payment.order_id,
-            orderAmount: parseFloat(amount),
+            orderAmount: numericAmount,
             customerName,
             customerPhone,
             returnUrl,
@@ -87,7 +101,9 @@ router.post('/create-order', authenticateToken, async (req: Request, res: Respon
  */
 router.post('/webhook', async (req: Request, res: Response) => {
     try {
-        const { orderId, orderAmount, txStatus, txMsg, txTime, referenceId, paymentMode } = req.body;
+        // Sanitize webhook data to prevent prototype pollution attacks
+        const sanitizedData = sanitizeWebhookData(req.body);
+        const { orderId, orderAmount, txStatus, txMsg, txTime, referenceId, paymentMode } = sanitizedData;
 
         logger.info(`Payment webhook received for order: ${orderId}`);
 
@@ -104,6 +120,28 @@ router.post('/webhook', async (req: Request, res: Response) => {
     } catch (error) {
         logger.error('Error processing payment webhook:', error);
         res.status(500).json({ success: false });
+    }
+});
+
+/**
+ * Get payment history for authenticated user
+ */
+router.get('/history', authenticateToken, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+
+        const payments = await getUserPayments(userId);
+
+        res.json({
+            success: true,
+            data: payments,
+        });
+    } catch (error) {
+        logger.error('Error fetching payment history:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch payment history',
+        });
     }
 });
 
@@ -198,7 +236,7 @@ router.get('/receipt/:orderId', authenticateToken, async (req: Request, res: Res
             });
         }
 
-        const user = await findUserById(userId);
+        const user = await userRepository.findById(userId);
 
         if (!user) {
             return res.status(404).json({
@@ -213,8 +251,8 @@ router.get('/receipt/:orderId', authenticateToken, async (req: Request, res: Res
             amount: parseFloat(payment.amount.toString()),
             paymentMethod: payment.payment_method || 'N/A',
             paymentTime: payment.payment_time || new Date(),
-            customerName: user.mobile,
-            customerPhone: user.mobile,
+            customerName: user.mobileNumber,
+            customerPhone: user.mobileNumber,
         });
 
         if (!receiptPath) {

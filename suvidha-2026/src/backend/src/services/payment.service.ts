@@ -9,7 +9,6 @@ export interface Payment {
     order_id: string;
     payment_session_id?: string;
     amount: number;
-    currency: string;
     payment_method?: string;
     transaction_id?: string;
     cashfree_order_id?: string;
@@ -34,10 +33,10 @@ export const createPayment = async (
         const finalOrderId = orderId || generateOrderId();
 
         const result = await pool.query(
-            `INSERT INTO payments (user_id, bill_id, order_id, amount, currency, status)
-             VALUES ($1, $2, $3, $4, $5, $6)
+            `INSERT INTO payments (user_id, bill_id, order_id, amount, status)
+             VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
-            [userId, billId, finalOrderId, amount, 'INR', 'pending']
+            [userId, billId, finalOrderId, amount, 'pending']
         );
 
         logger.info(`Payment record created: ${finalOrderId}`);
@@ -142,7 +141,7 @@ export const getPaymentByOrderId = async (orderId: string): Promise<Payment | nu
 export const getUserPayments = async (userId: number): Promise<Payment[]> => {
     try {
         const result = await pool.query(
-            `SELECT p.*, b.service_type, b.consumer_number, b.bill_month
+            `SELECT p.*, b.service_type, b.consumer_number
              FROM payments p
              LEFT JOIN bills b ON p.bill_id = b.id
              WHERE p.user_id = $1

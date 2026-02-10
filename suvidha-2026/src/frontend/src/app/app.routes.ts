@@ -31,6 +31,7 @@ export const routes: Routes = [
       { path: 'consumer-input', component: ConsumerInputComponent },
       { path: 'service/:id', component: ServiceDetailComponent },
       { path: 'payment', component: PaymentComponent },
+      { path: 'payment/callback', loadComponent: () => import('./pages/payment/payment-callback.component').then(m => m.PaymentCallbackComponent) },
       { path: 'transaction-history', loadComponent: () => import('./pages/payment/transaction-history.component').then(m => m.TransactionHistoryComponent) },
       { path: 'receipt', component: ReceiptComponent },
       { path: 'bills', loadComponent: () => import('./components/bills-list/bills-list.component').then(m => m.BillsListComponent) },

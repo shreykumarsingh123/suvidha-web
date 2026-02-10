@@ -14,10 +14,10 @@ export const getRevenueStats = async (req: AuthRequest, res: Response): Promise<
                 COUNT(*) as total_bills,
                 SUM(amount) as total_revenue,
                 service_type,
-                COUNT(*) FILTER (WHERE payment_status = 'paid') as paid_count,
-                SUM(amount) FILTER (WHERE payment_status = 'paid') as paid_amount,
-                COUNT(*) FILTER (WHERE payment_status = 'pending') as pending_count,
-                SUM(amount) FILTER (WHERE payment_status = 'pending') as pending_amount
+                COUNT(*) FILTER (WHERE status = 'paid') as paid_count,
+                SUM(amount) FILTER (WHERE status = 'paid') as paid_amount,
+                COUNT(*) FILTER (WHERE status = 'pending') as pending_count,
+                SUM(amount) FILTER (WHERE status = 'pending') as pending_amount
             FROM bills
             GROUP BY service_type
         `;
@@ -30,10 +30,10 @@ export const getRevenueStats = async (req: AuthRequest, res: Response): Promise<
                 b.id,
                 b.user_id,
                 u.mobile_number,
-                u.name as user_name,
+                u.username as user_name,
                 b.service_type,
                 b.amount,
-                b.payment_status,
+                b.status as payment_status,
                 b.bill_number,
                 b.due_date,
                 b.created_at,
@@ -77,7 +77,7 @@ export const getRevenueStats = async (req: AuthRequest, res: Response): Promise<
                 DATE_TRUNC('month', created_at) as month,
                 service_type,
                 COUNT(*) as bill_count,
-                SUM(amount) FILTER (WHERE payment_status = 'paid') as revenue
+                SUM(amount) FILTER (WHERE status = 'paid') as revenue
             FROM bills
             WHERE created_at >= NOW() - INTERVAL '6 months'
             GROUP BY DATE_TRUNC('month', created_at), service_type
@@ -119,7 +119,7 @@ export const getAllComplaints = async (req: AuthRequest, res: Response): Promise
                 t.id,
                 t.user_id,
                 u.mobile_number,
-                u.name as user_name,
+                u.username as user_name,
                 t.title,
                 t.description,
                 t.category,
@@ -264,7 +264,7 @@ export const getBillDetails = async (req: AuthRequest, res: Response): Promise<v
             SELECT 
                 b.*,
                 u.mobile_number,
-                u.name as user_name,
+                u.username as user_name,
                 u.email as user_email,
                 p.transaction_id,
                 p.payment_method,

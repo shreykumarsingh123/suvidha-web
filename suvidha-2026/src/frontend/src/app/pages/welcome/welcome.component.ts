@@ -75,7 +75,7 @@ export class WelcomeComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.idleService.resetTimer();
+        // Idle timer starts automatically after login
     }
 
     navigateTo(path: string) {

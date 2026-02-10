@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { PaymentService } from '../../core/services/payment.service';
+import { IdleService } from '../../core/services/idle.service';
 
 @Component({
     selector: 'app-receipt',
@@ -24,9 +26,11 @@ import { Router } from '@angular/router';
                 
                 <div class="text-left text-sm font-mono space-y-3 flex-1 text-slate-600">
                     <div class="flex justify-between"><span>Date:</span><span class="text-slate-900 font-bold">{{today}}</span></div>
-                    <div class="flex justify-between"><span>Txn ID:</span><span class="text-slate-900 font-bold">{{txnId}}</span></div>
+                    <div class="flex justify-between"><span>Time:</span><span class="text-slate-900 font-bold">{{currentTime}}</span></div>
+                    <div class="flex justify-between"><span>Order ID:</span><span class="text-slate-900 font-bold text-xs">{{orderId || 'N/A'}}</span></div>
+                    <div class="flex justify-between"><span>Txn ID:</span><span class="text-slate-900 font-bold text-xs">{{txnId}}</span></div>
                     <div class="border-b border-slate-100 my-2"></div>
-                    <div class="flex justify-between font-bold text-xl text-slate-900"><span>PAID:</span><span>₹1,240</span></div>
+                    <div class="flex justify-between font-bold text-xl text-slate-900"><span>PAID:</span><span>₹{{amount}}</span></div>
                 </div>
                 
                 <div class="mt-8 pt-4 border-t-2 border-slate-900">
@@ -39,19 +43,80 @@ import { Router } from '@angular/router';
             </div>
         </div>
         
-        <button (click)="finish()" class="mt-10 px-10 py-4 bg-white text-slate-900 rounded-full font-bold hover:bg-blue-50 transition-colors shadow-[0_0_40px_rgba(255,255,255,0.2)] cursor-pointer">
-            Collect & Home
-        </button>
+        <!-- Action Buttons -->
+        <div class="fixed bottom-10 left-1/2 transform -translate-x-1/2 flex gap-4">
+            <button (click)="downloadReceipt()" [disabled]="downloading" class="px-8 py-4 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-colors shadow-lg cursor-pointer disabled:opacity-50 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" *ngIf="!downloading"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
+                <span>{{downloading ? 'Downloading...' : 'Download Receipt'}}</span>
+            </button>
+            
+            <button (click)="printReceipt()" class="px-8 py-4 bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg cursor-pointer flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                Print Receipt
+            </button>
+            
+            <button (click)="finish()" class="px-8 py-4 bg-white text-slate-900 rounded-full font-bold hover:bg-slate-100 transition-colors shadow-lg cursor-pointer">
+                Return to Dashboard
+            </button>
+        </div>
     </div>
   `
 })
-export class ReceiptComponent {
-    router = inject(Router);
-    
+export class ReceiptComponent implements OnInit {
+    private router = inject(Router);
+    private route = inject(ActivatedRoute);
+    private paymentService = inject(PaymentService);
+    private idleService = inject(IdleService);
+
     today = new Date().toLocaleDateString('en-GB');
+    currentTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     txnId = 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    orderId = '';
+    amount = 1240;
+    downloading = false;
+
+    ngOnInit() {
+        // Get order ID from query params
+        this.orderId = this.route.snapshot.queryParams['orderId'] || '';
+
+        // Auto-download receipt after 2 seconds
+        setTimeout(() => {
+            if (this.orderId) {
+                this.downloadReceipt();
+            }
+        }, 2000);
+    }
+
+    downloadReceipt() {
+        if (!this.orderId || this.downloading) return;
+
+        this.downloading = true;
+        this.paymentService.downloadReceipt(this.orderId).subscribe({
+            next: (blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `SUVIDHA-Receipt-${this.orderId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                this.downloading = false;
+            },
+            error: (err) => {
+                console.error('Failed to download receipt:', err);
+                this.downloading = false;
+                alert('Failed to download receipt. Please contact support.');
+            }
+        });
+    }
+
+    printReceipt() {
+        window.print();
+    }
 
     finish() {
+        // Return to dashboard (idle timer continues independently)
         this.router.navigate(['/dashboard']);
     }
 }

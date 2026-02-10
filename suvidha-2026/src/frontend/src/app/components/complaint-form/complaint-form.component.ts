@@ -6,10 +6,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { ComplaintType, CreateComplaintDto } from '../../models/complaint.model';
 
 @Component({
-    selector: 'app-complaint-form',
-    standalone: true,
-    imports: [CommonModule, FormsModule],
-    template: `
+  selector: 'app-complaint-form',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
     <div class="complaint-form-container">
       <h2>File a Municipal Complaint</h2>
 
@@ -85,7 +85,7 @@ import { ComplaintType, CreateComplaintDto } from '../../models/complaint.model'
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .complaint-form-container {
       max-width: 700px;
       margin: 0 auto;
@@ -203,63 +203,77 @@ import { ComplaintType, CreateComplaintDto } from '../../models/complaint.model'
   `]
 })
 export class ComplaintFormComponent {
-    private complaintService = inject(ComplaintService);
-    private authService = inject(AuthService);
+  private complaintService = inject(ComplaintService);
+  private authService = inject(AuthService);
 
-    formData: CreateComplaintDto & { location: string } = {
-        title: '',
-        description: '',
-        category: 'municipal',
-        priority: 'medium',
-        complaintType: undefined,
-        location: ''
+  formData: CreateComplaintDto & { location: string } = {
+    title: '',
+    description: '',
+    category: 'municipal',
+    priority: 'medium',
+    complaintType: undefined,
+    location: ''
+  };
+
+  complaintTypes = [
+    { value: ComplaintType.STREET_LIGHT, label: 'Street Light Issue' },
+    { value: ComplaintType.POTHOLE, label: 'Pothole' },
+    { value: ComplaintType.SEWER, label: 'Sewer Problem' },
+    { value: ComplaintType.GARBAGE, label: 'Garbage Collection' },
+    { value: ComplaintType.WATER_SUPPLY, label: 'Water Supply Issue' },
+    { value: ComplaintType.ROAD_DAMAGE, label: 'Road Damage' },
+    { value: ComplaintType.OTHER, label: 'Other' }
+  ];
+
+  submitting = false;
+  error: string | null = null;
+  success: string | null = null;
+
+  submitComplaint() {
+    this.submitting = true;
+    this.error = null;
+    this.success = null;
+
+    // Get current user ID from auth service
+    const currentUser = this.authService.currentUser();
+    if (!currentUser?.id) {
+      this.error = 'User authentication required. Please log in again.';
+      this.submitting = false;
+      return;
+    }
+
+    // Add userId to the complaint data
+    const complaintData = {
+      ...this.formData,
+      userId: currentUser.id
     };
 
-    complaintTypes = [
-        { value: ComplaintType.STREET_LIGHT, label: 'Street Light Issue' },
-        { value: ComplaintType.POTHOLE, label: 'Pothole' },
-        { value: ComplaintType.SEWER, label: 'Sewer Problem' },
-        { value: ComplaintType.GARBAGE, label: 'Garbage Collection' },
-        { value: ComplaintType.WATER_SUPPLY, label: 'Water Supply Issue' },
-        { value: ComplaintType.ROAD_DAMAGE, label: 'Road Damage' },
-        { value: ComplaintType.OTHER, label: 'Other' }
-    ];
+    this.complaintService.createComplaint(complaintData).subscribe({
+      next: (response) => {
+        this.success = 'Complaint submitted successfully! Officers have been notified.';
+        this.submitting = false;
 
-    submitting = false;
-    error: string | null = null;
-    success: string | null = null;
+        // Reset form after 2 seconds
+        setTimeout(() => {
+          this.resetForm();
+          this.success = null;
+        }, 2000);
+      },
+      error: (err) => {
+        this.error = err.message || 'Failed to submit complaint. Please try again.';
+        this.submitting = false;
+      }
+    });
+  }
 
-    submitComplaint() {
-        this.submitting = true;
-        this.error = null;
-        this.success = null;
-
-        this.complaintService.createComplaint(this.formData).subscribe({
-            next: (response) => {
-                this.success = 'Complaint submitted successfully! Officers have been notified.';
-                this.submitting = false;
-
-                // Reset form after 2 seconds
-                setTimeout(() => {
-                    this.resetForm();
-                    this.success = null;
-                }, 2000);
-            },
-            error: (err) => {
-                this.error = err.message || 'Failed to submit complaint. Please try again.';
-                this.submitting = false;
-            }
-        });
-    }
-
-    resetForm() {
-        this.formData = {
-            title: '',
-            description: '',
-            category: 'municipal',
-            priority: 'medium',
-            complaintType: undefined,
-            location: ''
-        };
-    }
+  resetForm() {
+    this.formData = {
+      title: '',
+      description: '',
+      category: 'municipal',
+      priority: 'medium',
+      complaintType: undefined,
+      location: ''
+    };
+  }
 }

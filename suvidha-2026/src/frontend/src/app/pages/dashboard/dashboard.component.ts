@@ -1,4 +1,4 @@
-import { Component, inject, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,14 +12,30 @@ declare const lucide: any;
   imports: [CommonModule],
   templateUrl: './dashboard.component.html'
 })
-export class DashboardComponent implements AfterViewInit, OnDestroy {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   authService = inject(AuthService);
   idleService = inject(IdleService);
   router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   currentTime: string = '12:00';
   private clockInterval: any;
   private iconInitialized: boolean = false;
+
+  constructor() {
+    // Setup effect to force change detection when idle timer updates
+    effect(() => {
+      // Access the signal to create dependency
+      const time = this.idleService.remainingTime();
+      // Force change detection when signal updates
+      this.cdr.markForCheck();
+    });
+  }
+
+  ngOnInit(): void {
+    // ✅ FIX #2: Start idle timer when dashboard loads
+    this.idleService.startIdleTimer();
+  }
 
   ngAfterViewInit(): void {
     // Initialize Lucide icons
@@ -33,6 +49,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // ✅ FIX #6: Proper cleanup to prevent memory leaks
     if (this.clockInterval) {
       clearInterval(this.clockInterval);
     }
@@ -48,6 +65,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private updateClock(): void {
     const now = new Date();
     this.currentTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    this.cdr.detectChanges();
   }
 
   get remainingTime(): number {
@@ -68,7 +86,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    * Get username from current user or return default
    */
   get username(): string {
-    const user = this.authService.getCurrentUser();
+    // ✅ FIX #7: Use signal directly for consistency
+    const user = this.authService.currentUser();
     return user?.username || 'Guest User';
   }
 
@@ -77,7 +96,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    * Format: ******1234
    */
   get maskedMobile(): string {
-    const user = this.authService.getCurrentUser();
+    // ✅ FIX #7: Use signal directly for consistency
+    const user = this.authService.currentUser();
     const mobile = user?.mobileNumber || user?.mobile || '';
     if (mobile.length >= 4) {
       return '******' + mobile.slice(-4);

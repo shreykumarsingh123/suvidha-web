@@ -1,6 +1,9 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { PaymentService } from '../../../core/services/payment.service';
+import { IdleService } from '../../../core/services/idle.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
     selector: 'app-service-detail',
@@ -43,10 +46,14 @@ import { ActivatedRoute, Router } from '@angular/router';
                         </div>
                     </div>
 
+                    <div *ngIf="error" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                        {{error}}
+                    </div>
+
                     <div class="flex flex-col gap-4">
-                        <button (click)="payNow()" class="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-xl shadow-lg border-b-[6px] border-blue-800 active:border-b-0 active:translate-y-1.5 transition-all flex items-center justify-center gap-3 cursor-pointer">
+                        <button (click)="payNow()" [disabled]="processing" class="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-xl shadow-lg border-b-[6px] border-blue-800 active:border-b-0 active:translate-y-1.5 transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                            Pay Securely
+                            {{processing ? 'Processing...' : 'Pay Securely'}}
                         </button>
                         <button (click)="goBack()" class="w-full py-4 bg-white text-slate-600 font-bold rounded-xl border-2 border-slate-200 hover:bg-slate-50 transition-all cursor-pointer">
                             Cancel
@@ -62,9 +69,14 @@ export class ServiceDetailComponent implements OnInit {
     serviceName = '';
     provider = '';
     amount = 0;
-    
+    processing = false;
+    error: string | null = null;
+
     router = inject(Router);
     route = inject(ActivatedRoute);
+    paymentService = inject(PaymentService);
+    idleService = inject(IdleService);
+    authService = inject(AuthService);
 
     ngOnInit() {
         this.route.params.subscribe(params => {
@@ -72,15 +84,47 @@ export class ServiceDetailComponent implements OnInit {
             const names: any = { 'elec': 'Electricity Services', 'water': 'Water & Sanitation', 'gas': 'Gas Services', 'muni': 'Municipal' };
             this.serviceName = names[type] || 'Service';
         });
-        
+
         this.route.queryParams.subscribe(params => {
             this.provider = params['provider'] || 'Consumer';
             this.amount = params['amount'] || 0;
         });
     }
 
-    payNow() {
-        this.router.navigate(['/payment']);
+    async payNow() {
+        this.processing = true;
+        this.error = null;
+
+        try {
+            // Get current user
+            const currentUser = this.authService.currentUser();
+            if (!currentUser) {
+                this.error = 'Please log in to continue';
+                this.processing = false;
+                return;
+            }
+
+            // Create payment order
+            const result = await this.paymentService.createPaymentOrder({
+                amount: this.amount,
+                customerName: this.provider,
+                customerPhone: currentUser.mobileNumber || '0000000000'
+            }).toPromise();
+
+            if (result?.success && result.data) {
+                // Initiate Cashfree payment
+                this.paymentService.initiateCashfreePayment(
+                    result.data.paymentSessionId,
+                    result.data.orderId
+                );
+            } else {
+                this.error = 'Failed to create payment order. Please try again.';
+                this.processing = false;
+            }
+        } catch (err: any) {
+            this.error = err.message || 'Payment initialization failed';
+            this.processing = false;
+        }
     }
 
     goBack() {

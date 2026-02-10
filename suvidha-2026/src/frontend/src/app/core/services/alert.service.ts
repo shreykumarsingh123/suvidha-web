@@ -25,10 +25,10 @@ export class AlertService {
      * Get active alerts
      */
     getActiveAlerts(serviceType?: string): Observable<{ success: boolean; data: Alert[] }> {
-        const params = serviceType ? { serviceType } : {};
+        const options = serviceType ? { params: { serviceType } } : {};
         return this.http.get<{ success: boolean; data: Alert[] }>(
             `${this.apiUrl}/active`,
-            { params }
+            options
         );
     }
 }

@@ -18,12 +18,19 @@ export class HelpdeskController {
             // Allow anonymous ticket creation
             const userId = req.user?.id || null;
 
+            logger.info(`Ticket creation request received. UserId: ${userId}`);
+            logger.info(`Request body:`, JSON.stringify(req.body));
+
             const ticketData: CreateTicketDto = {
                 ...req.body,
                 userId,
             };
 
+            logger.info(`Ticket data to be validated:`, JSON.stringify(ticketData));
+
             const result = await createTicketService(ticketData);
+
+            logger.info(`Ticket service result: ${result.success}, Message: ${result.message}`);
 
             if (result.success) {
                 res.status(201).json({
@@ -31,6 +38,7 @@ export class HelpdeskController {
                     ticket: result.data,
                 });
             } else {
+                logger.error(`Ticket validation failed: ${result.message}`);
                 res.status(400).json({ message: result.message });
             }
         } catch (error) {

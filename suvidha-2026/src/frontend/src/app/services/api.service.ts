@@ -9,7 +9,7 @@ import { environment } from '../../environments/environment';
 export class ApiService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private handleError(operation = 'request') {
     return (error: HttpErrorResponse) => {

@@ -135,7 +135,7 @@ export async function getAllTicketsService(userId?: number | null): Promise<Serv
         let query = `
             SELECT 
                 t.*,
-                u.full_name as user_name,
+                u.username as user_name,
                 u.mobile_number as user_mobile
             FROM tickets t
             LEFT JOIN users u ON t.user_id = u.id
